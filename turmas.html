@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Turmas — FlyLearn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..900&family=Caveat:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
+
+</head>
+<body>
+
+<div class="app-shell">
+  
+    <aside class="sidebar">
+      <a class="nav-brand" href="dashboard.html"><span class="dot"></span>FlyLearn</a>
+      <nav>
+        <a class="" href="dashboard.html"><span class="ic">🏠</span>Painel</a>
+        <a class="active" href="turmas.html"><span class="ic">👥</span>Turmas</a>
+        <a class="" href="gerador.html"><span class="ic">✏️</span>Gerar atividade</a>
+        <a class="" href="correcao.html"><span class="ic">🧾</span>Corrigir atividade</a>
+        <a class="" href="biblioteca.html"><span class="ic">📚</span>Minhas atividades</a>
+        <a class="" href="perfil.html"><span class="ic">⚙️</span>Perfil</a>
+      </nav>
+      <div class="sidebar-foot">
+        <a href="index.html"><span class="ic">↩</span>Sair</a>
+      </div>
+    </aside>
+    
+  <main class="main">
+    
+    <div class="topbar">
+      <div>
+        <h1>Turmas</h1>
+        <div class="topbar-sub">Cada turma pertence a você e agrupa os alunos que farão suas provas.</div>
+      </div>
+      <div class="avatar">P</div>
+    </div>
+    
+    <div class="content">
+
+      <div class="panel">
+        <h2>Minhas turmas</h2>
+        <p class="sub">Selecione uma turma para ver ou editar a lista de alunos.</p>
+        <div class="turma-grid" id="turma-grid"></div>
+      </div>
+
+      <div class="panel" id="alunos-panel" style="display:none;">
+        <h2 id="alunos-title">Alunos da turma</h2>
+        <p class="sub">Alunos não têm login — servem apenas para identificar quem respondeu cada prova.</p>
+
+        <table class="aluno-table" id="aluno-table">
+          <thead>
+            <tr><th>Nome completo</th><th>CPF</th><th>Telefone</th><th></th></tr>
+          </thead>
+          <tbody id="aluno-tbody"></tbody>
+        </table>
+        <div id="aluno-empty" class="aluno-empty" style="display:none;">Nenhum aluno cadastrado nesta turma ainda.</div>
+
+        <div class="add-aluno-row">
+          <div class="field"><label>Nome completo</label><input type="text" id="novo-aluno-nome" placeholder="Ex.: Ana Souza"></div>
+          <div class="field"><label>CPF</label><input type="text" id="novo-aluno-cpf" placeholder="Somente números" maxlength="11"></div>
+          <div class="field"><label>Telefone</label><input type="text" id="novo-aluno-telefone" placeholder="(11) 90000-0000"></div>
+          <button type="button" class="btn-generate" id="btn-add-aluno" style="padding:11px 20px;">+ Adicionar</button>
+        </div>
+        <div class="error-box" id="aluno-error"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modal-nova-turma">
+  <div class="modal-form-card">
+    <h2>Nova turma</h2>
+    <div class="field" style="margin-bottom:16px;"><label for="nova-turma-nome">Nome da turma</label><input type="text" id="nova-turma-nome" placeholder="Ex.: 9º Ano A"></div>
+    <div class="field" style="margin-bottom:16px;"><label for="nova-turma-segmento">Segmento / série</label>
+      <select id="nova-turma-segmento">
+        <option>Educação Infantil</option>
+        <option>Fundamental I</option>
+        <option selected>Fundamental II</option>
+        <option>Ensino Médio</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:22px;"><label for="nova-turma-ano">Ano letivo</label><input type="text" id="nova-turma-ano" placeholder="2026" value="2026"></div>
+    <div class="form-actions" style="margin-top:0;">
+      <button type="button" class="btn-generate" id="btn-criar-turma">Criar turma</button>
+      <button type="button" class="btn-ghost" id="btn-cancelar-turma" style="color:var(--ink);border-color:#C9DCEF;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'flylearn_turmas';
+
+  function seedData(){
+    return [
+      { id: 't1', nome: '9º Ano A', segmento: 'Fundamental II', ano: '2026',
+        alunos: [
+          { id:'a1', nome:'Ana Beatriz Souza', cpf:'11122233344', telefone:'(11) 91111-2222' },
+          { id:'a2', nome:'Carlos Eduardo Lima', cpf:'22233344455', telefone:'(11) 93333-4444' }
+        ]},
+      { id: 't2', nome: '9º Ano B', segmento: 'Fundamental II', ano: '2026', alunos: [] }
+    ];
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) { const seed = seedData(); save(seed); return seed; }
+      return JSON.parse(raw);
+    }catch(e){ return seedData(); }
+  }
+  function save(turmas){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(turmas)); }catch(e){}
+  }
+
+  let turmas = load();
+  let ativaId = turmas.length ? turmas[0].id : null;
+
+  const grid = document.getElementById('turma-grid');
+  const alunosPanel = document.getElementById('alunos-panel');
+  const alunosTitle = document.getElementById('alunos-title');
+  const tbody = document.getElementById('aluno-tbody');
+  const alunoEmpty = document.getElementById('aluno-empty');
+  const alunoError = document.getElementById('aluno-error');
+
+  function escapeHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function renderGrid(){
+    grid.innerHTML = '';
+    turmas.forEach(t=>{
+      const card = document.createElement('div');
+      card.className = 'turma-card' + (t.id === ativaId ? ' active' : '');
+      card.innerHTML = `<h3>${escapeHtml(t.nome)}</h3><div class="meta">${escapeHtml(t.segmento || '')}${t.ano ? ' · ' + escapeHtml(t.ano) : ''}</div><div class="count">${t.alunos.length} aluno${t.alunos.length===1?'':'s'}</div>`;
+      card.addEventListener('click', ()=>{ ativaId = t.id; renderGrid(); renderAlunos(); });
+      grid.appendChild(card);
+    });
+    const novo = document.createElement('button');
+    novo.type = 'button';
+    novo.className = 'new-turma-card';
+    novo.innerHTML = '<span class="plus">+</span><span>Nova turma</span>';
+    novo.addEventListener('click', ()=>{ document.getElementById('modal-nova-turma').classList.add('show'); });
+    grid.appendChild(novo);
+  }
+
+  function turmaAtiva(){ return turmas.find(t=>t.id===ativaId); }
+
+  function renderAlunos(){
+    const t = turmaAtiva();
+    if(!t){ alunosPanel.style.display='none'; return; }
+    alunosPanel.style.display = 'block';
+    alunosTitle.textContent = 'Alunos — ' + t.nome;
+    tbody.innerHTML = '';
+    if(!t.alunos.length){
+      alunoEmpty.style.display = 'block';
+    } else {
+      alunoEmpty.style.display = 'none';
+      t.alunos.forEach(a=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(a.nome)}</td><td>${escapeHtml(a.cpf)}</td><td>${escapeHtml(a.telefone)}</td><td style="text-align:right;"><button class="btn-icon-del" data-id="${a.id}">Remover</button></td>`;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('.btn-icon-del').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          t.alunos = t.alunos.filter(a=>a.id !== btn.dataset.id);
+          save(turmas); renderGrid(); renderAlunos();
+        });
+      });
+    }
+  }
+
+  document.getElementById('btn-add-aluno').addEventListener('click', ()=>{
+    alunoError.classList.remove('show');
+    const t = turmaAtiva();
+    const nome = document.getElementById('novo-aluno-nome').value.trim();
+    const cpf = document.getElementById('novo-aluno-cpf').value.trim().replace(/\D/g,'');
+    const telefone = document.getElementById('novo-aluno-telefone').value.trim();
+    if(!nome || cpf.length !== 11 || !telefone){
+      alunoError.textContent = 'Preencha nome, CPF (11 dígitos) e telefone do aluno.';
+      alunoError.classList.add('show');
+      return;
+    }
+    t.alunos.push({ id: 'a' + Date.now(), nome, cpf, telefone });
+    save(turmas);
+    document.getElementById('novo-aluno-nome').value = '';
+    document.getElementById('novo-aluno-cpf').value = '';
+    document.getElementById('novo-aluno-telefone').value = '';
+    renderGrid(); renderAlunos();
+  });
+
+  document.getElementById('btn-criar-turma').addEventListener('click', ()=>{
+    const nome = document.getElementById('nova-turma-nome').value.trim();
+    if(!nome) return;
+    const segmento = document.getElementById('nova-turma-segmento').value;
+    const ano = document.getElementById('nova-turma-ano').value.trim();
+    const nova = { id: 't' + Date.now(), nome, segmento, ano, alunos: [] };
+    turmas.push(nova);
+    save(turmas);
+    ativaId = nova.id;
+    document.getElementById('nova-turma-nome').value = '';
+    document.getElementById('modal-nova-turma').classList.remove('show');
+    renderGrid(); renderAlunos();
+  });
+  document.getElementById('btn-cancelar-turma').addEventListener('click', ()=>{
+    document.getElementById('modal-nova-turma').classList.remove('show');
+  });
+
+  renderGrid();
+  renderAlunos();
+})();
+</script>
+
+</body>
+</html>
