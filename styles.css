@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..900&family=Caveat:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Raleway:wght@500;600;700;800&family=Roboto:wght@400;500;600;700&display=swap');
 
 :root{
   --paper:#DCEAFB;
@@ -44,13 +44,29 @@ body{
   margin:0;
   background:var(--paper-light);
   color:var(--ink);
-  font-family:'Work Sans',sans-serif;
+  font-family:'Roboto',sans-serif;
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
 
 a{
   color:inherit;
+  text-decoration:none;
+}
+
+a:hover,
+a:focus,
+a:active,
+a:visited{
+  text-decoration:none;
+}
+
+/* ---------- TIPOGRAFIA ---------- */
+
+strong,
+b{
+  font-family:'Raleway',sans-serif;
+  font-weight:700;
 }
 
 button,
@@ -58,6 +74,19 @@ input,
 select,
 textarea{
   font:inherit;
+}
+
+button,
+.btn-primary,
+.btn-ghost,
+.btn-generate,
+.btn-small,
+.btn-danger-ghost,
+.btn-full,
+.nav-button,
+.nav-cta{
+  font-family:'Roboto',sans-serif;
+  text-decoration:none;
 }
 
 button{
@@ -74,7 +103,7 @@ img{
 }
 
 .display{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
 }
 
 .hand{
@@ -82,7 +111,7 @@ img{
 }
 
 .mono{
-  font-family:'Work Sans',sans-serif;
+  font-family:'Roboto',sans-serif;
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -140,7 +169,7 @@ img{
   display:flex;
   align-items:center;
   gap:10px;
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:700;
   font-size:1.35rem;
   text-decoration:none;
@@ -215,7 +244,7 @@ nav .wrap{
   display:flex;
   align-items:center;
   gap:10px;
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:700;
   font-size:1.15rem;
 }
@@ -322,7 +351,7 @@ nav ul li a:focus-visible{
   line-height:1.08;
   margin:0 0 22px;
   font-weight:600;
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
 }
 
 .hero h1 .underline{
@@ -615,7 +644,7 @@ section{
 }
 
 .section-head h2{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:clamp(1.8rem,3.4vw,2.5rem);
   margin:0 0 14px;
   font-weight:600;
@@ -642,7 +671,7 @@ section{
 }
 
 .step-card .num{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:2.1rem;
   color:var(--red);
   font-weight:700;
@@ -652,7 +681,7 @@ section{
 .step-card h3{
   font-size:1.08rem;
   margin:10px 0 8px;
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:600;
 }
 
@@ -724,7 +753,7 @@ section{
 }
 
 .feature-card h3{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:1.05rem;
   margin:0 0 6px;
   font-weight:600;
@@ -763,7 +792,7 @@ section{
 }
 
 .cta-band h2{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:clamp(1.6rem,3vw,2.2rem);
   margin:0 0 14px;
 }
@@ -855,7 +884,7 @@ footer .wrap{
 .field input[type="password"],
 .field input[type="number"],
 .field textarea{
-  font-family:'Work Sans',sans-serif;
+  font-family:'Roboto',sans-serif;
   border:1.5px solid #C9DCEF;
   background:#fff;
   border-radius:8px;
@@ -1001,7 +1030,7 @@ footer .wrap{
 
 .notebook h2,
 .notebook h1{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:600;
   font-size:1.7rem;
   margin:0 0 6px;
@@ -1056,7 +1085,7 @@ footer .wrap{
   display:flex;
   align-items:center;
   gap:10px;
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:700;
   font-size:1.3rem;
   margin-bottom:22px;
@@ -1073,7 +1102,7 @@ footer .wrap{
 }
 
 .auth-card h1{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:1.6rem;
   margin:0 0 8px;
   font-weight:600;
@@ -1131,6 +1160,7 @@ footer .wrap{
 }
 
 .forgot-password{
+  font-family:'Roboto',sans-serif;
   font-size:.86rem;
   color:var(--ink-blue);
   font-weight:600;
@@ -1138,7 +1168,7 @@ footer .wrap{
 }
 
 .forgot-password:hover{
-  text-decoration:underline;
+  text-decoration:none;
 }
 
 .recovery-card{
@@ -1259,7 +1289,7 @@ footer .wrap{
 }
 
 .topbar h1{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:1.5rem;
   margin:0;
   font-weight:600;
@@ -1281,7 +1311,7 @@ footer .wrap{
   align-items:center;
   justify-content:center;
   font-weight:700;
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   flex-shrink:0;
 }
 
@@ -1309,7 +1339,7 @@ footer .wrap{
 }
 
 .stat-card .stat-num{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:2rem;
   font-weight:700;
   color:var(--ink-blue);
@@ -1330,7 +1360,7 @@ footer .wrap{
 }
 
 .panel h2{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:1.2rem;
   margin:0 0 4px;
   font-weight:600;
@@ -1369,7 +1399,7 @@ footer .wrap{
 }
 
 .quick-action h3{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:1rem;
   margin:8px 0 4px;
   font-weight:600;
@@ -1484,7 +1514,7 @@ footer .wrap{
 }
 
 .turma-card h3{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:1.05rem;
   margin:0 0 4px;
   font-weight:600;
@@ -1596,7 +1626,7 @@ footer .wrap{
 }
 
 .modal-form-card h2{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:1.25rem;
   margin:0 0 18px;
   font-weight:600;
@@ -1645,7 +1675,7 @@ footer .wrap{
 }
 
 .lib-card h3{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:1.02rem;
   margin:0;
   font-weight:600;
@@ -1725,7 +1755,7 @@ footer .wrap{
 }
 
 .ws-header .ws-title{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:1.5rem;
   font-weight:700;
   margin:0 0 14px;
@@ -1769,7 +1799,7 @@ footer .wrap{
 }
 
 .question .q-num{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:700;
   color:var(--red);
   font-size:1.05rem;
@@ -1859,7 +1889,7 @@ footer .wrap{
 }
 
 .grade-card .grade-num{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-size:3.2rem;
   font-weight:800;
   color:var(--pencil);
@@ -1912,7 +1942,7 @@ footer .wrap{
 }
 
 .correction-item .ci-num{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:700;
   color:var(--ink-blue);
 }
@@ -1966,7 +1996,7 @@ footer .wrap{
 }
 
 .q-block .q-block-num{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:700;
   color:var(--red);
   font-size:1.02rem;
@@ -2129,7 +2159,7 @@ footer .wrap{
 }
 
 .sheet-head .title{
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:600;
   font-size:1.05rem;
   margin-top:4px;
@@ -2203,7 +2233,7 @@ footer .wrap{
   place-items:center;
   text-align:center;
   transform:rotate(-14deg);
-  font-family:'Fraunces',serif;
+  font-family:'Raleway',sans-serif;
   font-weight:700;
   line-height:1.1;
   background:rgba(245,250,255,.9);
@@ -2393,4 +2423,92 @@ footer .wrap{
   .stat-grid{
     grid-template-columns:1fr;
   }
+}
+/* =========================================================
+   ACRÉSCIMOS MÍNIMOS (FORMULÁRIOS)
+   ========================================================= */
+
+.two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;align-items:start}
+.two-col .panel{margin-bottom:0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid .full{grid-column:1 / -1}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:.86rem;font-weight:600}
+.field .hint{font-size:.78rem;color:var(--ink-light)}
+.field input,.field select{font:inherit;font-size:.94rem;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;color:inherit}
+.field input:focus,.field select:focus{outline:2px solid var(--pencil);outline-offset:1px}
+.field input[type="radio"],.field input[type="checkbox"]{padding:0;border:none;width:auto;display:inline-block}
+.form-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:18px}
+.table-wrap{overflow-x:auto}
+.aluno-table .code{font-size:.8rem;color:var(--ink-light);letter-spacing:.04em}
+.aluno-table .actions{text-align:right;white-space:nowrap}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.mini-list{display:flex;flex-direction:column}
+.mini-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.mini-item:last-child{border-bottom:none}
+.mini-item h4{font-size:.94rem;font-weight:600;margin:0 0 2px}
+.mini-item .meta{font-size:.8rem;color:var(--ink-light)}
+.mini-item .count{font-size:.8rem;font-weight:700;color:var(--ink-blue);white-space:nowrap}
+@media (max-width:1000px){.two-col{grid-template-columns:1fr}}
+@media (max-width:560px){.form-grid{grid-template-columns:1fr}}
+
+.stat-card .stat-hint{font-size:.78rem;color:var(--ink-light);margin-top:6px}
+.stat-card.alert{border-color:var(--red)}
+.stat-card.alert .stat-num{color:var(--red)}
+.two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:start}
+.two-col .panel{margin-bottom:0}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.panel-head p.sub{margin-bottom:12px}
+.table-wrap{overflow-x:auto}
+.aluno-table .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.aluno-table .code{font-family:'Roboto',sans-serif;font-size:.8rem;color:var(--ink-light);letter-spacing:.04em}
+.aluno-table .nota-baixa{color:var(--red)}
+.aluno-table .nota-ok{color:#2E6B47}
+.aluno-table .muted{color:var(--ink-light)}
+.tag.tag-blue{background:#EAF2FE;color:var(--pencil)}
+.mini-list{display:flex;flex-direction:column}
+.mini-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.mini-item:last-child{border-bottom:none}
+.mini-item h4{font-size:.94rem;font-weight:600;margin:0 0 2px}
+.mini-item .meta{font-size:.8rem;color:var(--ink-light)}
+.mini-item .count{font-size:.8rem;font-weight:700;color:var(--ink-blue);white-space:nowrap}
+.panel-link{font-family:'Roboto',sans-serif;font-size:.86rem;font-weight:600;color:var(--ink-blue);text-decoration:none;white-space:nowrap}
+.panel-link:hover{text-decoration:none}
+.pending-banner{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:#FBEAE6;border:1px solid var(--red);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px}
+.pending-banner p{color:#7A2A1B;font-size:.94rem}
+@media (max-width:1000px){.two-col{grid-template-columns:1fr}}
+
+/* =========================================================
+   AJUSTES FINAIS DE TIPOGRAFIA
+   ========================================================= */
+
+button strong,
+button b,
+.btn-primary strong,
+.btn-primary b,
+.btn-ghost strong,
+.btn-ghost b,
+.btn-generate strong,
+.btn-generate b,
+.btn-small strong,
+.btn-small b,
+.btn-danger-ghost strong,
+.btn-danger-ghost b,
+.nav-button strong,
+.nav-button b,
+.nav-cta strong,
+.nav-cta b{
+  font-family:'Roboto',sans-serif;
+}
+
+a,
+a:hover,
+a:focus,
+a:active,
+a:visited,
+button,
+button:hover,
+button:focus,
+button:active{
+  text-decoration:none;
 }

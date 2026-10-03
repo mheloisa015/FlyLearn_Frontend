@@ -3,217 +3,226 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Turmas — FlyLearn</title>
+<title>Turmas e alunos — FlyLearn</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="styles.css">
+<style>
+/* Acréscimos mínimos ao styles.css (formulários) */
+.two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;align-items:start}
+.two-col .panel{margin-bottom:0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid .full{grid-column:1 / -1}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:.86rem;font-weight:600}
+.field .hint{font-size:.78rem;color:var(--ink-light)}
+.field input,.field select{font:inherit;font-size:.94rem;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;color:inherit}
+.field input:focus,.field select:focus{outline:2px solid var(--pencil);outline-offset:1px}
+.form-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:18px}
+.table-wrap{overflow-x:auto}
+.aluno-table .code{font-size:.8rem;color:var(--ink-light);letter-spacing:.04em}
+.aluno-table .actions{text-align:right;white-space:nowrap}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.mini-list{display:flex;flex-direction:column}
+.mini-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.mini-item:last-child{border-bottom:none}
+.mini-item h4{font-size:.94rem;font-weight:600;margin:0 0 2px}
+.mini-item .meta{font-size:.8rem;color:var(--ink-light)}
+.mini-item .count{font-size:.8rem;font-weight:700;color:var(--ink-blue);white-space:nowrap}
+@media (max-width:1000px){.two-col{grid-template-columns:1fr}}
+@media (max-width:560px){.form-grid{grid-template-columns:1fr}}
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..900&family=Caveat:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-
-
 </head>
 <body>
 
 <div class="app-shell">
-  
-    <aside class="sidebar">
-      <a class="nav-brand" href="dashboard.html"><span class="dot"></span>FlyLearn</a>
-      <nav>
-        <a class="" href="dashboard.html"><span class="ic">🏠</span>Painel</a>
-        <a class="active" href="turmas.html"><span class="ic">👥</span>Turmas</a>
-        <a class="" href="gerador.html"><span class="ic">✏️</span>Gerar atividade</a>
-        <a class="" href="correcao.html"><span class="ic">🧾</span>Corrigir atividade</a>
-        <a class="" href="biblioteca.html"><span class="ic">📚</span>Minhas atividades</a>
-        <a class="" href="perfil.html"><span class="ic">⚙️</span>Perfil</a>
-      </nav>
-      <div class="sidebar-foot">
-        <a href="index.html"><span class="ic">↩</span>Sair</a>
-      </div>
-    </aside>
-    
+
+  <aside class="sidebar">
+    <a class="nav-brand" href="dashboard.html"><span class="dot"></span>FlyLearn</a>
+    <nav aria-label="Principal">
+      <a href="dashboard.html"><span class="ic">🏠</span>Painel</a>
+      <a class="active" href="turmas.html" aria-current="page"><span class="ic">👥</span>Turmas e alunos</a>
+      <a href="materias.html"><span class="ic">🗂️</span>Matérias</a>
+      <a href="questoes.html"><span class="ic">❓</span>Banco de questões</a>
+      <a href="gerador.html"><span class="ic">✏️</span>Montar prova</a>
+      <a href="biblioteca.html"><span class="ic">📚</span>Minhas provas</a>
+      <a href="correcao.html"><span class="ic">🧾</span>Aplicações e correção</a>
+      <a href="perfil.html"><span class="ic">⚙️</span>Perfil</a>
+    </nav>
+    <div class="sidebar-foot">
+      <a href="index.html"><span class="ic">↩</span>Sair</a>
+    </div>
+  </aside>
+
   <main class="main">
-    
+
     <div class="topbar">
       <div>
-        <h1>Turmas</h1>
-        <div class="topbar-sub">Cada turma pertence a você e agrupa os alunos que farão suas provas.</div>
+        <h1>Turmas e alunos</h1>
+        <div class="topbar-sub">Cadastre suas turmas e os alunos de cada uma.</div>
       </div>
-      <div class="avatar">P</div>
+      <div class="avatar" title="Professora">P</div>
     </div>
-    
+
     <div class="content">
 
-      <div class="panel">
-        <h2>Minhas turmas</h2>
-        <p class="sub">Selecione uma turma para ver ou editar a lista de alunos.</p>
-        <div class="turma-grid" id="turma-grid"></div>
+      <div class="two-col">
+
+        <!-- Tabela turma: ano, disciplina (professor_id vem da sessão) -->
+        <div class="panel">
+          <h2>Nova turma</h2>
+          <p class="sub">Informe o ano e a disciplina.</p>
+          <form action="#" method="post">
+            <input type="hidden" name="id" value="">
+            <div class="form-grid">
+              <div class="field">
+                <label for="turma-ano">Ano</label>
+                <input type="number" id="turma-ano" name="ano" min="1" max="12" step="1" placeholder="Ex.: 3" required>
+              </div>
+              <div class="field">
+                <label for="turma-disciplina">Disciplina</label>
+                <input type="text" id="turma-disciplina" name="disciplina" maxlength="100" placeholder="Ex.: Matemática" required>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="reset" class="btn-small">Limpar</button>
+              <button type="submit" class="btn-generate">Salvar turma</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Suas turmas</h2>
+              <p class="sub">Ano, disciplina e quantidade de alunos.</p>
+            </div>
+          </div>
+          <div class="mini-list">
+            <div class="mini-item">
+              <div><h4>3º ano</h4><div class="meta">Matemática</div></div>
+              <div><span class="count">26 alunos</span> <a class="btn-small" href="turmas.html?editar=1">Editar</a></div>
+            </div>
+            <div class="mini-item">
+              <div><h4>4º ano</h4><div class="meta">Língua Portuguesa</div></div>
+              <div><span class="count">24 alunos</span> <a class="btn-small" href="turmas.html?editar=2">Editar</a></div>
+            </div>
+            <div class="mini-item">
+              <div><h4>5º ano</h4><div class="meta">Geografia</div></div>
+              <div><span class="count">23 alunos</span> <a class="btn-small" href="turmas.html?editar=3">Editar</a></div>
+            </div>
+            <div class="mini-item">
+              <div><h4>6º ano</h4><div class="meta">Ciências</div></div>
+              <div><span class="count">23 alunos</span> <a class="btn-small" href="turmas.html?editar=4">Editar</a></div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="panel" id="alunos-panel" style="display:none;">
-        <h2 id="alunos-title">Alunos da turma</h2>
-        <p class="sub">Alunos não têm login — servem apenas para identificar quem respondeu cada prova.</p>
+      <!-- Tabela aluno: turma_id, nome, ra, email -->
+      <div class="panel" style="margin-top:24px">
+        <h2>Novo aluno</h2>
+        <p class="sub">Todo aluno pertence a uma turma.</p>
+        <form action="#" method="post">
+          <input type="hidden" name="id" value="">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="aluno-turma">Turma</label>
+              <select id="aluno-turma" name="turma_id" required>
+                <option value="">Selecione a turma</option>
+                <option value="1">3º ano · Matemática</option>
+                <option value="2">4º ano · Língua Portuguesa</option>
+                <option value="3">5º ano · Geografia</option>
+                <option value="4">6º ano · Ciências</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="aluno-nome">Nome completo</label>
+              <input type="text" id="aluno-nome" name="nome" maxlength="150" placeholder="Ex.: Ana Beatriz Souza" required>
+            </div>
+            <div class="field">
+              <label for="aluno-ra">RA</label>
+              <input type="number" id="aluno-ra" name="ra" min="1" step="1" inputmode="numeric" placeholder="Ex.: 20240117" required>
+              <span class="hint">Registro acadêmico, somente números.</span>
+            </div>
+            <div class="field">
+              <label for="aluno-email">E-mail</label>
+              <input type="email" id="aluno-email" name="email" placeholder="aluno@escola.com">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="reset" class="btn-small">Limpar</button>
+            <button type="submit" class="btn-generate">Salvar aluno</button>
+          </div>
+        </form>
+      </div>
 
-        <table class="aluno-table" id="aluno-table">
-          <thead>
-            <tr><th>Nome completo</th><th>CPF</th><th>Telefone</th><th></th></tr>
-          </thead>
-          <tbody id="aluno-tbody"></tbody>
-        </table>
-        <div id="aluno-empty" class="aluno-empty" style="display:none;">Nenhum aluno cadastrado nesta turma ainda.</div>
-
-        <div class="add-aluno-row">
-          <div class="field"><label>Nome completo</label><input type="text" id="novo-aluno-nome" placeholder="Ex.: Ana Souza"></div>
-          <div class="field"><label>CPF</label><input type="text" id="novo-aluno-cpf" placeholder="Somente números" maxlength="11"></div>
-          <div class="field"><label>Telefone</label><input type="text" id="novo-aluno-telefone" placeholder="(11) 90000-0000"></div>
-          <button type="button" class="btn-generate" id="btn-add-aluno" style="padding:11px 20px;">+ Adicionar</button>
+      <div class="panel" style="margin-top:24px">
+        <div class="panel-head">
+          <div>
+            <h2>Alunos cadastrados</h2>
+            <p class="sub">Filtre por turma para ver quem já está cadastrado.</p>
+          </div>
+          <div class="field">
+            <label for="filtro-turma">Turma</label>
+            <select id="filtro-turma" name="filtro_turma">
+              <option value="">Todas as turmas</option>
+              <option value="1">3º ano · Matemática</option>
+              <option value="2">4º ano · Língua Portuguesa</option>
+              <option value="3">5º ano · Geografia</option>
+              <option value="4">6º ano · Ciências</option>
+            </select>
+          </div>
         </div>
-        <div class="error-box" id="aluno-error"></div>
+        <div class="table-wrap">
+          <table class="aluno-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>RA</th>
+                <th>E-mail</th>
+                <th>Turma</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Ana Beatriz Souza</td>
+                <td><span class="code">20240117</span></td>
+                <td>ana.souza@escola.com</td>
+                <td>3º ano · Matemática</td>
+                <td class="actions"><a class="btn-small" href="turmas.html?aluno=1">Editar</a></td>
+              </tr>
+              <tr>
+                <td>Lucas Henrique Prado</td>
+                <td><span class="code">20240122</span></td>
+                <td>lucas.prado@escola.com</td>
+                <td>3º ano · Matemática</td>
+                <td class="actions"><a class="btn-small" href="turmas.html?aluno=2">Editar</a></td>
+              </tr>
+              <tr>
+                <td>Marina Oliveira</td>
+                <td><span class="code">20230308</span></td>
+                <td>marina.oliveira@escola.com</td>
+                <td>5º ano · Geografia</td>
+                <td class="actions"><a class="btn-small" href="turmas.html?aluno=3">Editar</a></td>
+              </tr>
+              <tr>
+                <td>Pedro Almeida</td>
+                <td><span class="code">20230311</span></td>
+                <td>—</td>
+                <td>5º ano · Geografia</td>
+                <td class="actions"><a class="btn-small" href="turmas.html?aluno=4">Editar</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>
   </main>
 </div>
-
-<div class="modal-overlay" id="modal-nova-turma">
-  <div class="modal-form-card">
-    <h2>Nova turma</h2>
-    <div class="field" style="margin-bottom:16px;"><label for="nova-turma-nome">Nome da turma</label><input type="text" id="nova-turma-nome" placeholder="Ex.: 9º Ano A"></div>
-    <div class="field" style="margin-bottom:16px;"><label for="nova-turma-segmento">Segmento / série</label>
-      <select id="nova-turma-segmento">
-        <option>Educação Infantil</option>
-        <option>Fundamental I</option>
-        <option selected>Fundamental II</option>
-        <option>Ensino Médio</option>
-      </select>
-    </div>
-    <div class="field" style="margin-bottom:22px;"><label for="nova-turma-ano">Ano letivo</label><input type="text" id="nova-turma-ano" placeholder="2026" value="2026"></div>
-    <div class="form-actions" style="margin-top:0;">
-      <button type="button" class="btn-generate" id="btn-criar-turma">Criar turma</button>
-      <button type="button" class="btn-ghost" id="btn-cancelar-turma" style="color:var(--ink);border-color:#C9DCEF;">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<script>
-(function(){
-  const STORAGE_KEY = 'flylearn_turmas';
-
-  function seedData(){
-    return [
-      { id: 't1', nome: '9º Ano A', segmento: 'Fundamental II', ano: '2026',
-        alunos: [
-          { id:'a1', nome:'Ana Beatriz Souza', cpf:'11122233344', telefone:'(11) 91111-2222' },
-          { id:'a2', nome:'Carlos Eduardo Lima', cpf:'22233344455', telefone:'(11) 93333-4444' }
-        ]},
-      { id: 't2', nome: '9º Ano B', segmento: 'Fundamental II', ano: '2026', alunos: [] }
-    ];
-  }
-
-  function load(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) { const seed = seedData(); save(seed); return seed; }
-      return JSON.parse(raw);
-    }catch(e){ return seedData(); }
-  }
-  function save(turmas){
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(turmas)); }catch(e){}
-  }
-
-  let turmas = load();
-  let ativaId = turmas.length ? turmas[0].id : null;
-
-  const grid = document.getElementById('turma-grid');
-  const alunosPanel = document.getElementById('alunos-panel');
-  const alunosTitle = document.getElementById('alunos-title');
-  const tbody = document.getElementById('aluno-tbody');
-  const alunoEmpty = document.getElementById('aluno-empty');
-  const alunoError = document.getElementById('aluno-error');
-
-  function escapeHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  function renderGrid(){
-    grid.innerHTML = '';
-    turmas.forEach(t=>{
-      const card = document.createElement('div');
-      card.className = 'turma-card' + (t.id === ativaId ? ' active' : '');
-      card.innerHTML = `<h3>${escapeHtml(t.nome)}</h3><div class="meta">${escapeHtml(t.segmento || '')}${t.ano ? ' · ' + escapeHtml(t.ano) : ''}</div><div class="count">${t.alunos.length} aluno${t.alunos.length===1?'':'s'}</div>`;
-      card.addEventListener('click', ()=>{ ativaId = t.id; renderGrid(); renderAlunos(); });
-      grid.appendChild(card);
-    });
-    const novo = document.createElement('button');
-    novo.type = 'button';
-    novo.className = 'new-turma-card';
-    novo.innerHTML = '<span class="plus">+</span><span>Nova turma</span>';
-    novo.addEventListener('click', ()=>{ document.getElementById('modal-nova-turma').classList.add('show'); });
-    grid.appendChild(novo);
-  }
-
-  function turmaAtiva(){ return turmas.find(t=>t.id===ativaId); }
-
-  function renderAlunos(){
-    const t = turmaAtiva();
-    if(!t){ alunosPanel.style.display='none'; return; }
-    alunosPanel.style.display = 'block';
-    alunosTitle.textContent = 'Alunos — ' + t.nome;
-    tbody.innerHTML = '';
-    if(!t.alunos.length){
-      alunoEmpty.style.display = 'block';
-    } else {
-      alunoEmpty.style.display = 'none';
-      t.alunos.forEach(a=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${escapeHtml(a.nome)}</td><td>${escapeHtml(a.cpf)}</td><td>${escapeHtml(a.telefone)}</td><td style="text-align:right;"><button class="btn-icon-del" data-id="${a.id}">Remover</button></td>`;
-        tbody.appendChild(tr);
-      });
-      tbody.querySelectorAll('.btn-icon-del').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          t.alunos = t.alunos.filter(a=>a.id !== btn.dataset.id);
-          save(turmas); renderGrid(); renderAlunos();
-        });
-      });
-    }
-  }
-
-  document.getElementById('btn-add-aluno').addEventListener('click', ()=>{
-    alunoError.classList.remove('show');
-    const t = turmaAtiva();
-    const nome = document.getElementById('novo-aluno-nome').value.trim();
-    const cpf = document.getElementById('novo-aluno-cpf').value.trim().replace(/\D/g,'');
-    const telefone = document.getElementById('novo-aluno-telefone').value.trim();
-    if(!nome || cpf.length !== 11 || !telefone){
-      alunoError.textContent = 'Preencha nome, CPF (11 dígitos) e telefone do aluno.';
-      alunoError.classList.add('show');
-      return;
-    }
-    t.alunos.push({ id: 'a' + Date.now(), nome, cpf, telefone });
-    save(turmas);
-    document.getElementById('novo-aluno-nome').value = '';
-    document.getElementById('novo-aluno-cpf').value = '';
-    document.getElementById('novo-aluno-telefone').value = '';
-    renderGrid(); renderAlunos();
-  });
-
-  document.getElementById('btn-criar-turma').addEventListener('click', ()=>{
-    const nome = document.getElementById('nova-turma-nome').value.trim();
-    if(!nome) return;
-    const segmento = document.getElementById('nova-turma-segmento').value;
-    const ano = document.getElementById('nova-turma-ano').value.trim();
-    const nova = { id: 't' + Date.now(), nome, segmento, ano, alunos: [] };
-    turmas.push(nova);
-    save(turmas);
-    ativaId = nova.id;
-    document.getElementById('nova-turma-nome').value = '';
-    document.getElementById('modal-nova-turma').classList.remove('show');
-    renderGrid(); renderAlunos();
-  });
-  document.getElementById('btn-cancelar-turma').addEventListener('click', ()=>{
-    document.getElementById('modal-nova-turma').classList.remove('show');
-  });
-
-  renderGrid();
-  renderAlunos();
-})();
-</script>
 
 </body>
 </html>
