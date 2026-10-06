@@ -1,86 +1,79 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Aplicações e correção — FlyLearn</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="styles.css">
-<style>.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}.ans{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin:14px 0}.nota{font-weight:700;font-variant-numeric:tabular-nums}.nota.ok{color:#2E6B47}.nota.low{color:var(--red)}</style></head>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplicações e correção — FlyLearn</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .tabs{display:flex;gap:6px;margin:12px 0}
+    .tab{padding:7px 14px;border:1px solid #d5d9e0;background:#fff;border-radius:999px;cursor:pointer;font:inherit}
+    .tab.active{background:#1f4fd8;border-color:#1f4fd8;color:#fff}
+    tr.sel{background:#eef3ff}
+    .empty-note{padding:24px;text-align:center;opacity:.65}
+    .link-btn{border:0;background:none;color:#1f4fd8;cursor:pointer;font:inherit;text-decoration:underline}
+    .alvo{font-size:.92rem;margin-bottom:12px}
+    .success-box{display:none}
+    @media(max-width:900px){.sidebar{display:none}.app-shell{display:block}}
+  </style>
+</head>
 <body>
-<div class="app-shell"><aside class="sidebar"><a class="nav-brand" href="dashboard.html"><span class="dot"></span>FlyLearn</a><nav aria-label="Principal"><a href="dashboard.html"><span class="ic">🏠</span>Painel</a><a href="turmas.html"><span class="ic">👥</span>Turmas e alunos</a><a href="materias.html"><span class="ic">🗂️</span>Matérias</a><a href="questoes.html"><span class="ic">❓</span>Banco de questões</a><a href="gerador.html"><span class="ic">✏️</span>Montar prova</a><a href="biblioteca.html"><span class="ic">📚</span>Minhas provas</a><a href="correcao.html" class="active" aria-current="page"><span class="ic">🧾</span>Aplicações e correção</a><a href="perfil.html"><span class="ic">⚙️</span>Perfil</a></nav><div class="sidebar-foot"><a href="index.html"><span class="ic">↩</span>Sair</a></div></aside>
-<main class="main"><div class="topbar"><div><h1>Aplicações e correção</h1><div class="topbar-sub">Aplique uma prova a uma turma e lance as respostas dos alunos para corrigir.</div></div><div class="avatar" title="Professora">P</div></div>
-<div class="content">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="nav-brand" href="dashboard.html"><span class="dot"></span>FlyLearn</a>
+      <nav aria-label="Principal">
+        <a href="dashboard.html"><span class="ic">🏠</span>Painel</a>
+        <a href="turmas.html"><span class="ic">👥</span>Turmas e alunos</a>
+        <a href="materias.html"><span class="ic">🗂️</span>Matérias</a>
+        <a href="questoes.html"><span class="ic">❓</span>Banco de questões</a>
+        <a href="gerador.html"><span class="ic">✏️</span>Montar prova</a>
+        <a href="biblioteca.html"><span class="ic">📚</span>Minhas provas</a>
+        <a href="correcao.html" class="active" aria-current="page"><span class="ic">🧾</span>Aplicações e correção</a>
+        <a href="perfil.html"><span class="ic">⚙️</span>Perfil</a>
+      </nav>
+      <div class="sidebar-foot"><a href="index.html"><span class="ic">↩</span>Sair</a></div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1>Aplicações e correção</h1>
+          <div class="topbar-sub">Aplique uma prova a uma turma, corrija pelo gabarito e acompanhe as notas.</div>
+        </div>
+        <a class="avatar" href="correcao-mobile.html" title="Versão para celular">P</a>
+      </div>
+      <div class="content">
+        <div class="panel">
+          <h2>1. Aplicar prova</h2>
+          <p class="sub">Cria uma avaliação para cada aluno, distribuindo as versões da prova.</p>
+          <div class="form-grid">
+            <div class="field"><label for="ap">Prova</label><select id="ap"></select></div>
+            <div class="field"><label for="ad">Data da aplicação</label><input type="date" id="ad"></div>
+            <div class="field"><label for="at">Turma</label><select id="at"></select></div>
+            <div class="field"><label for="aa">Aluno</label><select id="aa"></select></div>
+          </div>
+          <div class="error-box" id="err"></div>
+          <div class="success-box" id="okb"></div>
+          <div class="form-actions"><button type="button" class="btn-generate" id="apl">Aplicar prova</button></div>
+        </div>
 
-<div class="panel">
-  <h2>1. Aplicar prova</h2>
-  <p class="sub">Cria uma avaliação para cada aluno, distribuindo as versões da prova.</p>
-  <div class="form-grid">
-    <div class="field"><label for="ap">Prova</label><select id="ap"></select></div>
-    <div class="field"><label for="ad">Data da aplicação</label><input type="date" id="ad"></div>
-    <div class="field"><label for="at">Turma</label><select id="at"></select></div>
-    <div class="field"><label for="aa">Aluno</label><select id="aa"></select></div>
+        <div class="panel">
+          <h2>2. Avaliações aplicadas</h2>
+          <p class="sub" id="resumo"></p>
+          <div class="tabs" id="tabs"></div>
+          <div class="table-wrap">
+            <table class="aluno-table">
+              <thead><tr><th>Aluno</th><th>Prova / versão</th><th>Aplicação</th><th>Status</th><th class="num">Nota</th><th></th></tr></thead>
+              <tbody id="tb"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="scanMount"><p class="alvo" id="alvo"></p></div>
+      </div>
+    </main>
   </div>
-  <div class="error-box" id="err"></div><div class="success-box" id="okb"></div>
-  <div class="form-actions"><button type="button" class="btn-generate" id="apl">Aplicar prova</button></div>
-</div>
-
-<div class="panel">
-  <h2>2. Correção</h2>
-  <p class="sub" id="resumo"></p>
-  <div class="tabs" id="tabs"></div>
-  <div class="table-wrap"><table class="aluno-table"><thead><tr><th>Aluno</th><th>Prova / versão</th><th>Aplicação</th><th>Status</th><th class="num">Nota</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
-</div>
-
-</div></main></div>
-<script src="app.js"></script>
-<script>
-/* avaliacao: id, versao_prova_id, aluno_id, data_aplicacao, status ('aplicada'|'corrigida'), nota, data_correcao, created_at, updated_at
-   resposta: id, avaliacao_id, prova_questao_id, alternativa_id, correta, created_at */
-let st=new URLSearchParams(location.search).get('status')||'';
-const tn=n=>n==null?'—':n.toFixed(1).replace('.',',');
-const provasOk=()=>DB.provas.filter(p=>DB.versoes.some(v=>v.prova_id==p.id));
-function fillForm(){
-  const ps=provasOk();
-  $('#ap').innerHTML=ps.map(p=>`<option value="${p.id}">${esc(p.nome)} (${DB.versoes.filter(v=>v.prova_id==p.id).length} versões)</option>`).join('')||'<option value="">Nenhuma prova montada</option>';
-  $('#at').innerHTML=DB.turmas.map(t=>`<option value="${t.id}">${t.ano}º ano · ${esc(t.disciplina)}</option>`).join('')||'<option value="">Nenhuma turma</option>';
-  $('#ad').value=new Date().toISOString().slice(0,10);fillAlunos();
-}
-function fillAlunos(){$('#aa').innerHTML='<option value="">Todos os alunos da turma</option>'+DB.alunos.filter(a=>a.turma_id==$('#at').value).map(a=>`<option value="${a.id}">${esc(a.nome)} (RA ${a.ra})</option>`).join('')}
-$('#at').onchange=fillAlunos;
-$('#apl').onclick=()=>{
-  const err=$('#err'),okb=$('#okb');err.classList.remove('show');okb.classList.remove('show');
-  const pid=+$('#ap').value,vs=DB.versoes.filter(v=>v.prova_id==pid),fail=t=>{err.innerHTML=t;err.classList.add('show')};
-  if(!pid||!vs.length)return fail('Monte uma prova primeiro em <a href="gerador.html">Montar prova</a>.');
-  let al=DB.alunos.filter(a=>a.turma_id==$('#at').value);if($('#aa').value)al=al.filter(a=>a.id==$('#aa').value);
-  if(!al.length)return fail('Essa turma não tem alunos. Cadastre em <a href="turmas.html">Turmas e alunos</a>.');
-  const jaTem=a=>DB.avaliacoes.some(x=>x.aluno_id==a.id&&vs.some(v=>v.id==x.versao_prova_id));
-  const novos=al.filter(a=>!jaTem(a)),now=new Date().toISOString();
-  if(!novos.length)return fail('Esses alunos já têm essa prova aplicada.');
-  novos.forEach((a,i)=>DB.avaliacoes.push({id:id(),versao_prova_id:vs[i%vs.length].id,aluno_id:a.id,data_aplicacao:$('#ad').value,status:'aplicada',nota:null,data_correcao:null,respostas:[],created_at:now,updated_at:now}));
-  save();okb.textContent=novos.length+' avaliação(ões) criada(s)'+(al.length-novos.length?' ('+(al.length-novos.length)+' aluno(s) já tinham a prova)':'')+'. Veja abaixo.';okb.classList.add('show');st='aplicada';draw();
-};
-function draw(){
-  const all=DB.avaliacoes,ap=all.filter(a=>a.status=='aplicada').length,co=all.filter(a=>a.status=='corrigida'),md=co.length?co.reduce((s,a)=>s+a.nota,0)/co.length:null;
-  $('#resumo').textContent=ap+' aguardando correção · '+co.length+' corrigidas'+(md!=null?' · média '+tn(md):'');
-  $('#tabs').innerHTML=[['','Todas'],['aplicada','Aguardando correção'],['corrigida','Corrigidas']].map(s=>`<button class="btn-small${st==s[0]?' active':''}" onclick="st='${s[0]}';draw()">${s[1]}</button>`).join('');
-  const rows=all.filter(a=>!st||a.status==st).sort((a,b)=>b.id-a.id);
-  $('#tb').innerHTML=rows.map(a=>{const al=by('alunos',a.aluno_id),v=by('versoes',a.versao_prova_id),t=al&&by('turmas',al.turma_id),done=a.status=='corrigida';
-  return `<tr><td><b>${esc(al?.nome||'—')}</b><br><span class="code">RA ${al?.ra||'—'}${t?' · '+t.ano+'º ano':''}</span></td><td>${esc(by('provas',v.prova_id).nome)}<br><span class="code">${v.codigo}</span></td><td>${fmt(a.data_aplicacao)}</td>
-  <td><span class="tag ${done?'tag-green':'tag-red'}">${done?'Corrigida':'Aplicada'}</span></td><td class="num nota ${done?(a.nota>=6?'ok':'low'):''}">${tn(a.nota)}</td>
-  <td class="actions"><button class="btn-small" onclick="corrigir(${a.id})">${done?'Rever':'Corrigir'}</button> <button class="btn-icon-del" onclick="del(${a.id})">Excluir</button></td></tr>`}).join('')||'<tr><td colspan="6" class="aluno-empty">Nenhuma avaliação aqui. Use “Aplicar prova” acima.</td></tr>';
-}
-function del(i){if(!confirm('Excluir esta avaliação?'))return;DB.avaliacoes=DB.avaliacoes.filter(a=>a.id!=i);save();draw()}
-function corrigir(i){
-  const a=by('avaliacoes',i),v=by('versoes',a.versao_prova_id),al=by('alunos',a.aluno_id);
-  modal(`<div class="panel"><h2>${esc(al?.nome||'')} · ${v.codigo}</h2>
-  <p class="sub">Escolha a alternativa que o aluno marcou em cada questão (mesma ordem da prova). Deixe “—” se não respondeu.</p>
-  <div class="ans">${v.itens.map(it=>{const r=a.respostas.find(x=>x.prova_questao_id==it.pq),cur=r&&r.alternativa_id?it.alts.indexOf(r.alternativa_id):-1;
-   return `<div class="field"><label>${it.ordem}. ${r?(r.correta?'✅':'❌'):''}</label><select id="r${it.pq}"><option value="">—</option>${it.alts.map((_,k)=>`<option value="${k}"${k==cur?' selected':''}>${L[k]}</option>`).join('')}</select></div>`}).join('')}</div>
-  <details><summary style="cursor:pointer;font-weight:600;color:var(--ink-blue)">Ver gabarito desta versão</summary><p style="margin-top:8px">${gab(v).map((l,k)=>(k+1)+l).join(' · ')}</p></details>
-  <div class="form-actions"><button class="btn-generate" onclick="salvar(${i})">Salvar correção</button></div></div>`);
-}
-function salvar(i){
-  const a=by('avaliacoes',i),v=by('versoes',a.versao_prova_id),now=new Date().toISOString();let ok=0;
-  a.respostas=v.itens.map(it=>{const s=$('#r'+it.pq).value,alt=s===''?null:it.alts[+s],correta=alt!==null&&alt===gabId(it);if(correta)ok++;
-    return {id:id(),avaliacao_id:a.id,prova_questao_id:it.pq,alternativa_id:alt,correta,created_at:now}});
-  a.nota=Math.round(ok/v.itens.length*100)/10;a.status='corrigida';a.data_correcao=now;a.updated_at=now;
-  save();document.querySelector('.modal-overlay').remove();draw();
-}
-fillForm();draw();
-</script>
-</body></html>
+  <script src="app.js"></script>
+  <script src="correcao.js"></script>
+  <script src="omr-scan.js"></script>
+</body>
+</html>
