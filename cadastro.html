@@ -34,16 +34,16 @@
 
   <script>
     const API = ['localhost', '127.0.0.1'].includes(location.hostname)
-    ? 'https://flylearn.onrender.com'
-    : '/api';
+      ? 'https://flylearn.onrender.com'
+      : '/api';
 
-    document.getElementById=('cadastro-form').addEventListener('submit',async function(e) {
+    document.getElementById('cadastro-form').addEventListener('submit', async function (e) {
       e.preventDefault();
-      const bnt = this.querySelector('button[type=submit]');
-      bnt.disabled = true; bnt.textContent = 'Cirando...';
-      try{
-        const r = await fetch(API + '/professores/',{
-          method : 'POST',
+      const btn = this.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Criando...';
+      try {
+        const r = await fetch(API + '/professores/', {
+          method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
             nome: document.getElementById('nome').value,
@@ -51,13 +51,13 @@
             senha: document.getElementById('senha2').value
           })
         });
-        const dados = await r.json().catch(() =>({}));
-        if(!r.ok){alert(dados.erro|| 'Não foi possível criar a conta.'); return;}
+        const dados = await r.json().catch(() => ({}));
+        if (!r.ok) { alert(dados.erro || 'Não foi possível criar a conta.'); return; }
         window.location.href = 'dashboard.html';
-      }catch(err){
-        alert("Opps! Algo de errado aconteceu, tente novamente mais tarde!")
+      } catch (err) {
+        alert('Opps! Algo deu errado, tente novamente mais tarde!');
       } finally {
-        bnt.disabled = false; bnt.textContent = 'Criar conta';
+        btn.disabled = false; btn.textContent = 'Criar conta';
       }
     });
   </script>
