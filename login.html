@@ -42,15 +42,34 @@
         </section>
     </main>
     <script>
-        const loginForm =
-            document.getElementById("loginForm");
-        loginForm.addEventListener("submit", function (event) {
-            event.preventDefault();
-            const email =
-                document.getElementById("email").value;
-            const password =
-                document.getElementById("password").value;
-            console.log("Login:", email, password);
+       const API = ['localhost', '127.0.0.1'].includes(location.hostname)
+       ? 'https://flylearn.onrender.com'
+        : '/api';
+
+        document.getElementById('loginForm').addEventListener('submit', async function name(e) {
+            e.preventDefault();
+            const bnt = this.querySelector('button[type=submit]');
+            bnt.disabled = true; 
+            bnt.textContent = 'Entrando ... ';
+            try{
+                const r= await fetch(API + '/login/',{
+                    method: 'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        email:document.getElementById('email').value,
+                        senha: document.getElementById('password').value
+                    })
+                });
+            const dados = await r.json().catch(()=>({}));
+            if(!r.ok){alert(dados.erro | 'Não foi possível entrar.'); return;}
+            localStorage.setItem('flylearn_user', JSON.stringify(dados));
+            window.location.href= 'dashboard.html'
+            } catch (err){
+                alert('Opss! Algo de errado aconteceu , tente novamente em instantes!');
+            } finally{
+                bnt.disabled = false; 
+                bnt.textContent = 'Entrar';
+            }
         });
     </script>
 </body>
