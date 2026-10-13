@@ -24,35 +24,46 @@
 </div></div></main></div>
 <script src="app.js"></script>
 <script>
-/* materia: id, professor_id, nome, descricao, created_at, updated_at */
-let editId=null;
+/* Matérias agora são gravadas no banco via API (Django). */
+let editId=null,materias=[],questoes=[],provas=[];
 const tb=$('#tb');
+async function load(){
+  try{
+    materias=await api('/materias/?professor_id='+PROF.id);
+    questoes=await api('/questoes/');
+    provas=await api('/provas/?professor_id='+PROF.id);
+  }catch(e){alert(e.message)}
+  draw();
+}
 function draw(){
   const q=$('#q').value.trim().toLowerCase();
-  const ms=DB.materias.filter(m=>!q||m.nome.toLowerCase().includes(q));
+  const ms=materias.filter(m=>!q||(m.nome||'').toLowerCase().includes(q));
   $('#count').textContent=ms.length+' matéria'+(ms.length==1?'':'s');
   tb.innerHTML=ms.map(m=>{
-    const nq=DB.questoes.filter(x=>x.materia_id==m.id&&x.ativo).length, np=DB.provas.filter(p=>p.materia_id==m.id).length;
-    return `<tr><td><b>${esc(m.nome)}</b><br><span class="code">${esc(m.descricao||'Sem descrição')}</span></td><td><span class="tag tag-blue">${nq}</span></td><td>${np}</td><td>${fmt(m.updated_at||m.created_at)}<br><span class="code">criada em ${fmt(m.created_at)}</span></td><td class="actions"><button class="btn-small" onclick="edit(${m.id})">Editar</button> <button class="btn-icon-del" onclick="del(${m.id})" aria-label="Excluir ${esc(m.nome)}">Excluir</button></td></tr>`}).join('')||'<tr><td colspan="5" class="aluno-empty">Nenhuma matéria encontrada.</td></tr>';
+    const nq=questoes.filter(x=>x.materia_id==m.id&&x.ativo).length, np=provas.filter(p=>p.materia_id==m.id).length;
+    return `<tr><td><b>${esc(m.nome)}</b><br><span class="code">${esc(m.descricao||'Sem descrição')}</span></td><td><span class="tag tag-blue">${nq}</span></td><td>${np}</td><td>${fmt(m.updated_at||m.created_at)}<br><span class="code">criada em ${fmt(m.created_at)}</span></td><td class="actions"><button class="btn-small" onclick="edit(${m.id})">Editar</button> <button class="btn-small" onclick="del(${m.id})">Excluir</button></td></tr>`;
+  }).join('')||'<tr><td colspan="5">Nenhuma matéria cadastrada.</td></tr>';
 }
 function reset(){editId=null;$('#mn').value='';$('#md').value='';$('#form-title').textContent='Nova matéria';$('#save').textContent='Cadastrar matéria';$('#cancel').style.display='none';$('#err').classList.remove('show')}
-function edit(i){const m=by('materias',i);editId=i;$('#mn').value=m.nome;$('#md').value=m.descricao||'';$('#form-title').textContent='Editar matéria';$('#save').textContent='Salvar alterações';$('#cancel').style.display='';$('#mn').focus()}
-function del(i){
-  const m=by('materias',i);
-  if(DB.questoes.some(x=>x.materia_id==i)||DB.provas.some(p=>p.materia_id==i))return alert('Não é possível excluir: há questões ou provas vinculadas a esta matéria.');
+function edit(i){const m=materias.find(x=>x.id==i);editId=i;$('#mn').value=m.nome;$('#md').value=m.descricao||'';$('#form-title').textContent='Editar matéria';$('#save').textContent='Salvar alterações';$('#cancel').style.display='';$('#mn').focus()}
+async function del(i){
+  const m=materias.find(x=>x.id==i);
+  if(questoes.some(x=>x.materia_id==i)||provas.some(p=>p.materia_id==i))return alert('Não é possível excluir: há questões ou provas vinculadas a esta matéria.');
   if(!confirm('Excluir a matéria “'+m.nome+'”?'))return;
-  DB.materias=DB.materias.filter(x=>x.id!=i);save();if(editId==i)reset();draw();
+  try{await api('/materias/'+i+'/',{method:'DELETE'});if(editId==i)reset();await load()}catch(e){alert(e.message)}
 }
-$('#save').onclick=()=>{
+$('#save').onclick=async()=>{
   const nome=$('#mn').value.trim(),err=$('#err');
   if(!nome){err.textContent='Informe o nome da matéria.';err.classList.add('show');return}
-  if(DB.materias.some(m=>m.id!=editId&&m.nome.toLowerCase()==nome.toLowerCase())){err.textContent='Você já tem uma matéria com esse nome.';err.classList.add('show');return}
-  const now=new Date().toISOString(),desc=$('#md').value.trim();
-  if(editId){Object.assign(by('materias',editId),{nome,descricao:desc,updated_at:now})}
-  else DB.materias.push({id:id(),professor_id:1,nome,descricao:desc,created_at:now,updated_at:now});
-  save();reset();draw();
+  if(materias.some(m=>m.id!=editId&&(m.nome||'').toLowerCase()==nome.toLowerCase())){err.textContent='Você já tem uma matéria com esse nome.';err.classList.add('show');return}
+  const body=JSON.stringify({nome,descricao:$('#md').value.trim(),professor_id:PROF.id});
+  try{
+    if(editId) await api('/materias/'+editId+'/',{method:'PUT',body});
+    else await api('/materias/',{method:'POST',body});
+    reset();await load();
+  }catch(e){err.textContent=e.message;err.classList.add('show')}
 };
 $('#cancel').onclick=reset;$('#q').oninput=draw;
-draw();
+load();
 </script>
 </body></html>
