@@ -25,7 +25,7 @@ const NAV=[['dashboard','🏠','Painel'],['turmas','👥','Turmas e alunos'],['m
    biblioteca.html) usam isto em vez do DB/localStorage. API_BASE: no Netlify,
    /api/* é redirecionado pro Render (netlify.toml); local, chama o Render direto. */
 const API_BASE=['localhost','127.0.0.1'].includes(location.hostname)?'https://flylearn.onrender.com':'/api';
-const PROF=JSON.parse(localStorage.getItem('flylearn_professor')||'null')||{id:1};
+const PROF=JSON.parse(localStorage.getItem('flylearn_user')||'null')||{id:1};
 async function api(path,opts){
  const r=await fetch(API_BASE+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
  const dados=await r.json().catch(()=>({}));
