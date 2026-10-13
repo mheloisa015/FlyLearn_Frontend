@@ -61,7 +61,7 @@
                     })
                 });
             const dados = await r.json().catch(()=>({}));
-            if(!r.ok){alert(dados.erro | 'Não foi possível entrar.'); return;}
+            if(!r.ok){alert(dados.erro || 'Não foi possível entrar.'); return;}
             localStorage.setItem('flylearn_user', JSON.stringify(dados));
             window.location.href= 'dashboard.html'
             } catch (err){
