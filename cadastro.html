@@ -53,6 +53,7 @@
         });
         const dados = await r.json().catch(() => ({}));
         if (!r.ok) { alert(dados.erro || 'Não foi possível criar a conta.'); return; }
+        localStorage.setItem('flylearn_user', JSON.stringify(dados));
         window.location.href = 'dashboard.html';
       } catch (err) {
         alert('Opps! Algo deu errado, tente novamente mais tarde!');
