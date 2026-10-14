@@ -32,7 +32,6 @@
                 </div>
                 <div class="form-actions form-actions-full form-actions-login">
                     <button type="submit" class="btn-generate">Entrar</button>
-                    <a href="dashboard.html">Entrar</a>
                 </div>
             </form>
             <div class="auth-foot">
@@ -42,8 +41,10 @@
         </section>
     </main>
     <script>
-       const API = ['localhost', '127.0.0.1'].includes(location.hostname)
-       ? 'https://flylearn.onrender.com'
+        if (localStorage.getItem('flylearn_user')) 
+            location.replace('dashboard.html');
+        const API = ['localhost', '127.0.0.1'].includes(location.hostname)
+        ? 'https://flylearn.onrender.com'
         : '/api';
 
         document.getElementById('loginForm').addEventListener('submit', async function name(e) {
