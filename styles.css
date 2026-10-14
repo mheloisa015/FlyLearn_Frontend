@@ -606,7 +606,7 @@ nav ul li a:focus-visible{
 
 .strip .item{
   font-size:.82rem;
-  color:white;
+  color:var(--ink);
 }
 
 .strip .item b{
