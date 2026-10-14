@@ -108,7 +108,7 @@ const PROF=JSON.parse(localStorage.getItem('flylearn_user')||'null')||{id:null};
 async function api(path, opts) {
   const r = await fetch(API_BASE + path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts || {}));
   const dados = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(dados.erro || 'Não foi possível completar a operação.');
+  if (!r.ok) throw new Error(dados.erro || dados.error || ('Erro ' + r.status + ' ao falar com o servidor.'));
   return dados;
 }
 

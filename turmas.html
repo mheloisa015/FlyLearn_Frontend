@@ -151,7 +151,7 @@
 
     async function load() {
       try {
-        const d = await api('/turmas/');
+        const d = await api('/turmas/?professor_id=' + PROF.id);
         turmas = d.turmas;
         alunos = d.alunos;
       } catch (e) {
@@ -243,7 +243,8 @@
       e.preventDefault();
       const body = JSON.stringify({
         ano: $('#turma-ano').value,
-        disciplina: $('#turma-disciplina').value
+        disciplina: $('#turma-disciplina').value,
+        professor_id: PROF.id
       });
       try {
         if (editTurma) await api('/turmas/' + editTurma + '/', { method: 'PUT', body });
