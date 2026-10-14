@@ -606,11 +606,11 @@ nav ul li a:focus-visible{
 
 .strip .item{
   font-size:.82rem;
-  color:var(--ink);
+  color:#ffffff;
 }
 
 .strip .item b{
-  color:var(--ink);
+  color:#ffffff;
 }
 
 /* =========================================================
