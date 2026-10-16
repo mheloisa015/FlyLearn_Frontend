@@ -6,6 +6,19 @@
   <title>Aplicações e correção — FlyLearn</title>
   <link rel="stylesheet" href="styles.css">
   <script src="auth.js"></script>
+  <style>
+     @media (max-width: 700px) {
+      #tb tr:not(:has(.empty-note)) { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "a n" "p s" "d d" "x x"; gap: 6px 12px; padding: 14px 4px; border-bottom: 1px solid #e6e9ef; }
+      #tb td { display: block; padding: 0; border: 0; }
+      #tb td:nth-child(1) { grid-area: a; } #tb td:nth-child(2) { grid-area: p; }
+      #tb td:nth-child(3) { grid-area: d; font-size: .85rem; opacity: .75; }
+      #tb td:nth-child(4) { grid-area: s; justify-self: end; }
+      #tb td:nth-child(5) { grid-area: n; justify-self: end; font-size: 1.2rem; }
+      #tb td.actions { grid-area: x; text-align: left; display: flex; gap: 8px; flex-wrap: wrap; }
+      .aluno-table thead { display: none; }
+      .aluno-table, .aluno-table tbody { display: block; }
+    }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -29,7 +42,7 @@
           <h1>Aplicações e correção</h1>
           <div class="topbar-sub">Aplique uma prova a uma turma, corrija pelo gabarito e acompanhe as notas.</div>
         </div>
-        <a class="avatar" href="correcao-mobile.html" title="Versão para celular">P</a>
+        <a class="avatar" title="Professora">P</a>
       </div>
       <div class="content">
         <div class="panel">
@@ -58,12 +71,12 @@
           </div>
         </div>
 
-        <div id="scanMount"><p class="alvo" id="alvo"></p></div>
+        <div id="scanMount" data-exige-alvo></div>
       </div>
     </main>
   </div>
   <script src="app.js"></script>
-  <script src="correcao.js"></script>
   <script src="omr-scan.js"></script>
+  <script src="correcao.js"></script>
 </body>
 </html>
