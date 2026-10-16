@@ -1,16 +1,21 @@
 /* Painel "Corrigir por imagem" (câmera ou upload) para correcao.html.
-   Uso: <script src="omr-scan.js"></script> logo depois de app.js.
+   Uso: <script src="omr-scan.js"></script> depois de app.js e ANTES de correcao.js.
 
-   Backend (Render): POST {API_BASE}/corrigir, multipart:
+   Backend de leitura (Render): POST {API_BASE}/corrigir, multipart:
      foto     -> imagem da folha de respostas (obrigatório)
-     gabarito -> JSON com 10 letras (opcional; só vale se a folha não tiver QR legível)
+     gabarito -> JSON com 10 letras (a correcao.js manda o gabarito da versão do aluno escolhido)
    Resposta: { ok, linhas, resumo, qr:{lido,texto,uuid} } ou { ok:false, mensagem }.
 
-   Como o gabarito é escolhido (nesta ordem):
-     1) QR da folha  -> acha a versão da prova em DB.versoes (pelo uuid) e usa o gabarito dela;
-     2) window.omrScan.setGabarito(letras, rotulo), se alguém chamou (ex.: correcao.js);
-     3) gabarito de teste do servidor.
-   Evento 'omr:resultado' (document): detail = resumo + { versao_id, uuid, origem, respostas }.
+   O QR da folha (FL1:<uuid da versão>) é quem identifica a VERSÃO da prova e, portanto, o GABARITO:
+     1) o professor toca em "Corrigir" numa linha -> correcao.js chama omrScan.setGabarito(...) e o painel abre
+        (esse gabarito só vale se a folha vier sem QR legível);
+     2) o painel pede pra ler com o CELULAR (no computador abre em "Enviar imagem");
+     3) lida a folha, omrScan.porQr(uuid) (correcao.js) busca a versão no banco pelo UUID do QR; a nota
+        é recalculada com o gabarito dessa versão;
+     4) embaixo, "Salvar resultados" + lista dos alunos que fizeram ESSA versão (o aluno escolhido já vem marcado);
+        o botão chama omrScan.salvar(resultado, avaliacaoId), que grava no banco.
+   Folha com QR de versão desconhecida não pode ser salva.
+   Evento 'omr:resultado' (document): detail = resumo + { uuid, origem, respostas }.
    Imprimir a folha com QR de uma versão: window.omrScan.imprimirFolha(versao.uuid). */
 (function () {
   const API_BASE = (window.FLYLEARN_API || 'https://flylearn.onrender.com').replace(/\/$/, '');
@@ -55,34 +60,64 @@
   .scan-result .INCORRETA{color:#c0392b;font-weight:600}
   .scan-result .BRANCO,.scan-result .ANULADA{color:#8a6d00;font-weight:600}
   .scan-empty{opacity:.65;padding:30px 0;text-align:center}
+  .scan-phone{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:10px;background:#eef3ff;border:1px solid #c5d3fb;margin:0 0 16px;line-height:1.45}
+  .scan-phone .ic{font-size:1.7rem;line-height:1}
+  .scan-phone b{display:block;margin-bottom:2px}
+  .scan-phone small{display:block;opacity:.8;margin-top:4px}
+  .scan-save{margin-top:18px;padding-top:16px;border-top:1px solid #e6e9ef;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .scan-save[hidden],#scAlunoBox[hidden],#scBody[hidden],#scVazio[hidden],#scTopErr[hidden]{display:none}
+  .scan-save button{padding:13px 24px;border-radius:8px;border:1px solid #1f4fd8;background:#1f4fd8;color:#fff;cursor:pointer;font:inherit;font-weight:600}
+  .scan-save button:disabled{opacity:.55;cursor:not-allowed}
+  .scan-save select{padding:12px;border-radius:8px;border:1px solid #d5d9e0;font:inherit;max-width:100%}
+  .scan-save .msg{flex:1 1 240px;font-size:.92rem}
+  .scan-save .msg.ok{color:#14803c;font-weight:600}
+  .scan-save .msg.bad{color:#c0392b}
   `;
   document.head.appendChild(Object.assign(document.createElement('style'), { textContent: css }));
 
   const panel = document.createElement('div');
   panel.className = 'panel';
+  panel.id = 'scanPanel';
   panel.innerHTML = `
     <h2>3. Corrigir gabarito por imagem</h2>
     <p class="sub">Fotografe a <b>folha de respostas</b> (a que tem o QR) com a folha inteira no quadro, de preferência na vertical. Os quatro quadrados pretos dos cantos precisam aparecer.</p>
     <div class="scan-tip" id="scAlvo" style="margin:0 0 12px"></div>
-    <div class="scan-tabs" role="tablist">
-      <button type="button" role="tab" id="t-cam" aria-selected="true">Usar câmera</button>
-      <button type="button" role="tab" id="t-up" aria-selected="false">Enviar imagem</button>
-    </div>
-    <div class="scan-grid">
-      <div>
-        <div class="scan-stage" id="stage"></div>
-        <div class="scan-actions" id="acts"></div>
-        <div class="scan-tip" id="tip"></div>
-        <div class="error-box" id="scErr"></div>
+    <div class="error-box" id="scTopErr" hidden></div>
+    <div class="scan-empty" id="scVazio" hidden>Escolha um aluno na tabela acima e toque em <b>Corrigir</b> para começar a leitura.</div>
+    <div id="scBody">
+      <div class="scan-phone" id="scFone"></div>
+      <div class="scan-tabs" role="tablist">
+        <button type="button" role="tab" id="t-cam" aria-selected="true">Usar câmera</button>
+        <button type="button" role="tab" id="t-up" aria-selected="false">Enviar imagem</button>
       </div>
-      <div class="scan-result" id="scRes"><div class="scan-empty">O resultado da correção aparece aqui.</div></div>
+      <div class="scan-grid">
+        <div>
+          <div class="scan-stage" id="stage"></div>
+          <div class="scan-actions" id="acts"></div>
+          <div class="scan-tip" id="tip"></div>
+          <div class="error-box" id="scErr"></div>
+        </div>
+        <div class="scan-result" id="scRes"><div class="scan-empty">O resultado da correção aparece aqui.</div></div>
+      </div>
+      <div class="scan-save" id="scSave" hidden>
+        <label id="scAlunoBox" hidden style="flex:1 1 100%">Salvar para o aluno: <select id="scAluno"></select></label>
+        <button type="button" id="scSaveBtn">Salvar resultados</button>
+        <div class="msg" id="scSaveMsg"></div>
+      </div>
     </div>
     <canvas id="scCanvas" hidden></canvas>`;
   (document.querySelector('#scanMount') || document.querySelector('.content') || document.body).appendChild(panel);
 
   const $q = s => panel.querySelector(s);
   const stage = $q('#stage'), acts = $q('#acts'), tip = $q('#tip'), err = $q('#scErr'), res = $q('#scRes');
+  const body = $q('#scBody'), vazio = $q('#scVazio'), topErr = $q('#scTopErr'), fone = $q('#scFone');
+  const alunoBox = $q('#scAlunoBox'), alunoSel = $q('#scAluno'), saveBar = $q('#scSave'), saveBtn = $q('#scSaveBtn'), saveMsg = $q('#scSaveMsg');
   let stream = null, blob = null, mode = 'cam';
+  // na correcao.html o painel só abre depois de escolher o aluno (<div id="scanMount" data-exige-alvo>)
+  const mount = document.querySelector('#scanMount');
+  const exigeAlvo = !!(mount && mount.hasAttribute('data-exige-alvo'));
+  // celular/tablet (tela de toque) x computador
+  const ehCelular = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   const showErr = m => { err.textContent = m || ''; err.style.display = m ? 'block' : 'none'; };
   const stopCam = () => { stream && stream.getTracks().forEach(t => t.stop()); stream = null; };
@@ -103,7 +138,7 @@
     mode = m; blob = null; showErr('');
     $q('#t-cam').setAttribute('aria-selected', m === 'cam');
     $q('#t-up').setAttribute('aria-selected', m === 'up');
-    acts.innerHTML = ''; stage.innerHTML = '';
+    stopCam(); acts.innerHTML = ''; stage.innerHTML = '';
     stage.className = 'scan-stage' + (m === 'up' ? ' up' : ''); stage.style.width = '';
     stage.style.aspectRatio = '';
     if (m === 'cam') startCam(); else { stopCam(); uploadUI(); }
@@ -188,6 +223,8 @@
   async function send() {
     if (!blob) return;
     showErr('');
+    if (exigeAlvo && !gabarito) return showErr('Escolha primeiro o aluno na tabela (botão Corrigir).');
+    resetSalvar();
     const b = acts.querySelector('.primary'); if (b) { b.disabled = true; b.textContent = 'Corrigindo…'; }
     res.innerHTML = '<div class="scan-empty">Lendo marcações…</div>';
     const aviso = setTimeout(() => {
@@ -202,7 +239,7 @@
       const r = await fetch(API_BASE + '/corrigir', { method: 'POST', body: fd, signal: ctrl.signal });
       const data = await r.json().catch(() => ({}));
       if (!r.ok || data.ok === false) throw new Error(data.mensagem || data.erro || 'Falha na correção (' + r.status + ').');
-      render(data);
+      await render(data);
     } catch (e) {
       res.innerHTML = '<div class="scan-empty">Sem resultado.</div>';
       showErr(
@@ -218,16 +255,35 @@
 
   function atualizarAlvo() {
     $q('#scAlvo').textContent = gabarito
-      ? 'Avaliação selecionada: ' + (rotulo || '—') + ' (' + gabarito.join(' ') + '). Se a folha tiver QR legível, vale o QR.'
-      : 'O gabarito será identificado pelo QR da folha.';
+      ? 'Aluno selecionado: ' + (rotulo || '—') + ' (gabarito ' + gabarito.join(' ') + ').'
+      : (exigeAlvo ? '' : 'O gabarito será identificado pelo QR da folha.');
   }
 
-  /* ---- gabarito pelo QR (dados vêm do app.js: DB, by, gab) ---- */
-  const semHifen = u => String(u || '').replace(/-/g, '').toLowerCase();
-  function versaoPorUuid(uuid) {
-    if (typeof DB === 'undefined' || !DB.versoes) return null;
-    return DB.versoes.find(v => semHifen(v.uuid) === semHifen(uuid)) || null;
+  const showTopErr = m => { topErr.textContent = m || ''; topErr.hidden = !m; topErr.classList.toggle('show', !!m); };
+
+  /* Abre a leitura: pede o celular e escolhe a aba certa (celular = câmera; computador = enviar imagem). */
+  function abrir() {
+    body.hidden = false; vazio.hidden = true; showTopErr('');
+    resetSalvar(); window.omrScan.ultimo = null;
+    res.innerHTML = '<div class="scan-empty">O resultado da correção aparece aqui.</div>';
+    fone.innerHTML = ehCelular
+      ? '<span class="ic">📱</span><div><b>Leia a folha com o celular</b>Toque no botão azul abaixo e fotografe a folha inteira, na vertical, com os 4 quadrados pretos dos cantos aparecendo.</div>'
+      : '<span class="ic">📱</span><div><b>Faça a leitura com o celular</b>Abra o FlyLearn no celular, entre em <i>Aplicações e correção</i>, toque em <b style="display:inline">Corrigir</b> neste aluno e fotografe a folha de respostas. Você também pode enviar aqui uma foto ou digitalização que já tenha.<small>A leitura pela webcam do computador costuma sair com menos nitidez.</small></div>';
+    atualizarAlvo();
+    setMode(ehCelular ? 'cam' : 'up');
   }
+
+  function fechar() {
+    stopCam(); body.hidden = true; vazio.hidden = false; resetSalvar(); window.omrScan.ultimo = null; atualizarAlvo();
+  }
+
+  const semHifen = u => String(u || '').replace(/-/g, '').toLowerCase();
+
+  function resetSalvar() {
+    saveBar.hidden = true; saveBtn.disabled = false; saveBtn.textContent = 'Salvar resultados';
+    saveMsg.textContent = ''; saveMsg.className = 'msg'; alunoBox.hidden = true; alunoSel.innerHTML = ''; alunoSel.disabled = false;
+  }
+
   function corrigirLocal(linhas, g) {
     let ac = 0, er = 0, br = 0, an = 0;
     const novas = linhas.map((l, i) => {
@@ -241,34 +297,39 @@
     return { linhas: novas, resumo: { acertos: ac, erros: er, brancos: br, anuladas: an, total, nota: Math.round(ac * 1000 / total) / 100 } };
   }
 
-  function render(data) {
+  async function render(data) {
     let { linhas, resumo } = data;
     if (!linhas || !resumo) { res.innerHTML = '<div class="scan-empty">Folha não encontrada. Confira os 4 marcadores dos cantos.</div>'; return; }
 
-    let info = '', aviso = false, origem = 'teste', versaoId = null;
+    let info = '', aviso = false, origem = 'teste', podeSalvar = false, cand = [], sugerido = null;
     const uuid = data.qr && data.qr.uuid;
-    const v = uuid ? versaoPorUuid(uuid) : null;
-    if (v) {
-      const g = gab(v);
-      if (g.length === N_QUESTOES) {
-        ({ linhas, resumo } = corrigirLocal(linhas, g));
-        const p = by('provas', v.prova_id);
-        info = 'Folha identificada pelo QR: ' + (p ? p.nome : 'prova') + ' · versão ' + v.codigo + '.';
-        origem = 'qr'; versaoId = v.id;
-        if (gabarito && gabarito.join('') !== g.join('')) { aviso = true; info += ' Atenção: a avaliação selecionada usa outra versão da prova.'; }
-      } else { aviso = true; info = 'A versão do QR tem ' + g.length + ' questões, mas a folha lê ' + N_QUESTOES + '.'; }
-    } else if (uuid) {
-      aviso = true;
-      info = 'QR lido, mas essa versão da prova não existe neste navegador (outro computador ou dados limpos). ';
-      info += gabarito ? 'Usei o gabarito da avaliação selecionada.' : 'Usei o gabarito de TESTE do servidor.';
-      origem = gabarito ? 'manual' : 'teste';
+
+    if (uuid && typeof window.omrScan.porQr === 'function') {
+      // o QR manda: versão da prova e gabarito vêm do banco, pelo UUID da folha
+      let q = null, falhou = false;
+      try { q = await window.omrScan.porQr(uuid); } catch (e) { falhou = true; }
+      if (q && q.letras && q.letras.length === N_QUESTOES) {
+        ({ linhas, resumo } = corrigirLocal(linhas, q.letras));
+        cand = q.candidatos || []; sugerido = q.sugerido || null; origem = 'qr';
+        podeSalvar = cand.length > 0;
+        info = 'Folha identificada pelo QR: ' + (q.rotulo || 'versão da prova') + '.';
+        if (!cand.length) { aviso = true; info += ' Nenhum aluno com essa versão aguardando correção.'; }
+        else if (!sugerido && gabarito) { aviso = true; info += ' O aluno que você escolheu (' + (rotulo || '—') + ') fez outra versão: marque abaixo o aluno desta folha.'; }
+      } else if (q) {
+        aviso = true; info = 'A versão do QR tem ' + (q.letras ? q.letras.length : '?') + ' questões, mas a folha lê ' + N_QUESTOES + '.';
+      } else {
+        aviso = true;
+        info = falhou ? 'Não consegui consultar a versão do QR (servidor indisponível). Tente de novo.'
+                      : 'QR lido, mas essa versão de prova não existe neste sistema. Confira se a folha é do FlyLearn.';
+      }
     } else if (gabarito) {
-      aviso = true; info = 'QR não lido. Usei o gabarito da avaliação selecionada (' + (rotulo || '—') + ').'; origem = 'manual';
+      aviso = true; origem = 'manual'; podeSalvar = true;
+      info = 'QR não lido. Usei o gabarito de ' + (rotulo || '—') + ' — confira se a folha é desse aluno antes de salvar.';
     } else {
-      aviso = true; info = 'QR não lido e nenhuma avaliação selecionada: usei o gabarito de TESTE do servidor. Tente uma foto mais nítida.';
+      aviso = true; info = 'QR não lido e nenhum aluno escolhido: a nota abaixo usa o gabarito de TESTE do servidor e não pode ser salva.';
     }
 
-    const detalhe = Object.assign({}, resumo, { versao_id: versaoId, uuid: uuid || null, origem, respostas: linhas.map(l => l.resposta_detectada) });
+    const detalhe = Object.assign({}, resumo, { uuid: uuid || null, origem, respostas: linhas.map(l => l.resposta_detectada) });
     window.omrScan.ultimo = detalhe;
     document.dispatchEvent(new CustomEvent('omr:resultado', { detail: detalhe }));
 
@@ -286,18 +347,56 @@
         <thead><tr><th>Questão</th><th>Marcada</th><th>Correta</th><th>Situação</th></tr></thead>
         <tbody>${linhas.map(l => `<tr><td>${l.questao}</td><td>${l.resposta_detectada}</td><td>${l.resposta_correta}</td><td class="${l.situacao}">${l.situacao.charAt(0) + l.situacao.slice(1).toLowerCase()}</td></tr>`).join('')}</tbody>
       </table>`;
+
+    alunoSel.innerHTML = '';
+    if (origem === 'qr' && cand.length) {
+      if (!sugerido) alunoSel.add(new Option('— escolha o aluno —', ''));
+      cand.forEach(c => alunoSel.add(new Option(c.label, c.id)));
+      if (sugerido) alunoSel.value = sugerido;
+      alunoBox.hidden = false;
+    } else alunoBox.hidden = true;
+    saveBar.hidden = !podeSalvar;
+    if (podeSalvar) saveMsg.textContent = 'Conferiu o resultado? Salve para registrar a nota.';
   }
+
+  saveBtn.onclick = async () => {
+    const r = window.omrScan.ultimo;
+    if (!r || typeof window.omrScan.salvar !== 'function') return;
+    if (!alunoBox.hidden && !alunoSel.value) { saveMsg.textContent = 'Escolha o aluno desta folha.'; saveMsg.className = 'msg bad'; return; }
+    saveBtn.disabled = true; saveBtn.textContent = 'Salvando…'; saveMsg.className = 'msg'; saveMsg.textContent = '';
+    try {
+      saveMsg.textContent = await window.omrScan.salvar(r, alunoBox.hidden ? null : +alunoSel.value);
+      saveMsg.className = 'msg ok';
+      saveBtn.textContent = 'Resultado salvo ✓';      // continua travado: evita salvar duas vezes sem querer
+      alunoSel.disabled = true;
+    } catch (e) {
+      saveMsg.textContent = e.message || 'Não foi possível salvar. Tente de novo.';
+      saveMsg.className = 'msg bad';
+      saveBtn.disabled = false; saveBtn.textContent = 'Salvar resultados';
+    }
+  };
 
   window.omrScan = {
     ultimo: null,
+    salvar: null,   // a correcao.js define: async (resultado, avaliacaoId|null) => mensagem (ou lança erro)
+    porQr: null,    // a correcao.js define: async (uuid) => { letras, rotulo, candidatos, sugerido } | null
+    /* escolhe o aluno/versão a corrigir (vale só se a folha vier sem QR legível) e abre o painel */
     setGabarito(letras, r) {
-      if (letras == null) { gabarito = null; rotulo = ''; showErr(''); return atualizarAlvo(); }
+      if (letras == null) {
+        gabarito = null; rotulo = ''; showErr('');
+        if (exigeAlvo) fechar(); else atualizarAlvo();
+        return;
+      }
       const l = Array.from(letras, x => String(x).trim().toUpperCase());
       if (l.length !== N_QUESTOES) {
-        showErr('O leitor atual corrige provas de ' + N_QUESTOES + ' questões (esta tem ' + l.length + ').');
+        gabarito = null; rotulo = '';
+        if (exigeAlvo) fechar();
+        showTopErr('O leitor atual corrige provas de ' + N_QUESTOES + ' questões (esta tem ' + l.length + ').');
         return false;
       }
-      gabarito = l; rotulo = r || ''; showErr(''); atualizarAlvo(); return true;
+      gabarito = l; rotulo = r || ''; showErr('');
+      abrir();
+      return true;
     },
     /* abre o PDF A4 da folha de respostas, com o QR da versão (uuid da versão da prova) */
     imprimirFolha(uuid) { window.open(API_BASE + '/folha/' + semHifen(uuid) + '.pdf', '_blank'); },
@@ -308,5 +407,5 @@
   $q('#t-up').onclick = () => setMode('up');
   window.addEventListener('pagehide', stopCam);
   atualizarAlvo();
-  setMode('cam');
+  if (exigeAlvo) fechar(); else abrir();
 })();
