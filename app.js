@@ -117,8 +117,13 @@ async function api(path, opts) {
    diferente de provaPg/gabPg acima, que leem do DB mock em localStorage. */
 const provaPgApi = v => `
   <section class="pg">
-    <h1>${esc(v.prova_nome)}</h1>
-    <div class="mt">${esc(v.materia_nome)} · Versão <b>${v.codigo}</b></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div style="flex:1">
+        <h1>${esc(v.prova_nome)}</h1>
+        <div class="mt">${esc(v.materia_nome)} · Versão <b>${v.codigo}</b></div>
+      </div>
+      <img src="${API_BASE}/versoes/${v.id}/qr.png" alt="QR da versão ${esc(v.codigo)}" style="width:72px;height:72px;flex:none">
+    </div>
     <div class="id">Nome: ______________________________________ RA: ____________ Turma: ________ Data: ___/___/______</div>
     ${v.prova_descricao ? `<p class="ins">${esc(v.prova_descricao)}</p>` : ''}
     ${v.itens.map(it => `
