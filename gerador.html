@@ -258,6 +258,12 @@
       }
     };
 
+    /* PDF da folha de respostas com o QR da versão: modelo de 10 ou 20 questões, conforme a prova */   // <-- NOVO (mudança 1)
+    function abrirFolhaRespostas(uuid, n) {                                                              // <-- NOVO
+      const base = (window.FLYLEARN_API || 'https://flylearn.onrender.com').replace(/\/$/, '');          // <-- NOVO
+      window.open(base + '/folha/' + String(uuid).replace(/-/g, '').toLowerCase() + '.pdf?n=' + n, '_blank');   // <-- NOVO
+    }                                                                                                    // <-- NOVO
+
     async function show(nome, vs) {
       const r = $('#result');
       r.style.display = '';
@@ -288,6 +294,7 @@
                   <td class="actions">
                     <button type="button" class="btn-small" onclick="imprimirVersoesProvaApi([${v.id}],'${esc(nome)}')">🖨 Prova</button>
                     <button type="button" class="btn-small" onclick="imprimirGabaritosProvaApi([${v.id}],'${esc(nome)}')">🖨 Gabarito</button>
+                    <button type="button" class="btn-small" onclick="abrirFolhaRespostas('${v.uuid}', ${v.itens.length})">🖨 Folha de respostas (${v.itens.length})</button>   <!-- NOVO (mudança 2) -->
                   </td>
                 </tr>
               `).join('')}
