@@ -80,7 +80,6 @@
               <thead>
                 <tr>
                   <th></th>
-                  <th>Nº</th>
                   <th>Enunciado</th>
                   <th>Alternativas</th>
                 </tr>
@@ -171,11 +170,10 @@
           <td class="c">
             <input type="checkbox" ${sel.has(q.id) ? 'checked' : ''} ${P || (!sel.has(q.id) && sel.size >= NQ()) ? 'disabled' : ''} onchange="tg(${q.id},this.checked)" aria-label="Incluir questão ${q.id}">
           </td>
-          <td><b>#${q.id}</b></td>
           <td>${esc(q.enunciado)}</td>
           <td>${q.n}</td>
         </tr>
-      `).join('') || '<tr><td colspan="4" class="aluno-empty">Nenhuma questão ativa nesta matéria. Cadastre em <a href="questoes.html">Banco de questões</a>.</td></tr>';
+      `).join('') || '<tr><td colspan="3" class="aluno-empty">Nenhuma questão ativa nesta matéria. Cadastre em <a href="questoes.html">Banco de questões</a>.</td></tr>';
 
       $('#selcount').textContent = sel.size + ' de ' + NQ() + ' selecionadas · ' + qs.length + ' ativas na matéria';
     }
