@@ -128,8 +128,8 @@
     const id = +b.dataset.id, a = avs.find(x => x.id === id);
     if (b.dataset.a === 'corrigir') corrigir(id);
     else if (b.dataset.a === 'folha' && a) {
-      const prova = provas.find(x => x.id === a.prova_id);          // 10 ou 20 questões: escolhe o modelo da folha
-      window.omrScan.imprimirFolha(a.versao_uuid, prova ? prova.n_questoes : 10);
+      // folha de 10 ou 20 questões (conforme a prova) com o QR da versão e o cabeçalho já preenchido com o aluno
+      imprimirFolhasRespostasApi([a.versao_prova_id], a.prova_nome, { nome: a.aluno_nome, ra: a.aluno_ra, turma: a.turma_nome });
     }
     else if (b.dataset.a === 'del') excluir(id);
   });

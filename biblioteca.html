@@ -96,6 +96,10 @@
                           <button class="btn-generate" style="padding:9px 16px;font-size:.86rem" onclick="imprimirVersoesProvaApi([${vs.map(v => v.id)}],'${esc(p.nome)}')">🖨 Imprimir provas (PDF)</button>
                           <button class="btn-small" onclick="imprimirGabaritosProvaApi([${vs.map(v => v.id)}],'${esc(p.nome)}')">🖨 Imprimir gabaritos (PDF)</button>
                         </div>
+                        <div class="chips" style="margin-top:8px;align-items:center">
+                          <button class="btn-small" onclick="imprimirFolhasRespostasApi([${vs.map(v => v.id)}],'${esc(p.nome)}')">🖨 Imprimir folhas de resposta (QR)</button>
+                          ${vs.length > 1 ? `<span class="meta">ou só a versão:</span>` + vs.map(v => `<button class="btn-small" onclick="imprimirFolhasRespostasApi([${v.id}],'${esc(p.nome)}')" title="Folha de respostas com o QR da versão ${esc(v.codigo)}">${esc(v.codigo)}</button>`).join('') : ''}
+                        </div>
                       ` : ''}
                     </div>
                   </div>
@@ -109,7 +113,7 @@
             }).join('')}
           </div>
           <p class="form-hint" style="margin-top:14px">
-            Os botões de impressão abrem a janela do navegador: em "Destino", escolha <b>Salvar como PDF</b> (ou sua impressora). Clique no código de uma versão para ver uma só.
+            Os botões de impressão abrem a janela do navegador: em "Destino", escolha <b>Salvar como PDF</b> (ou sua impressora). Clique no código de uma versão para ver uma só. A <b>folha de respostas</b> traz o QR que identifica a versão na hora da correção por imagem.
           </p>
         </div>
       `;
@@ -156,6 +160,7 @@
           <div class="form-actions" style="justify-content:flex-start">
             <button class="btn-generate" onclick="imprimirVersoesProvaApi([${v.id}],'${esc(v.prova_nome)}')">🖨 Prova (PDF)</button>
             <button class="btn-small" onclick="imprimirGabaritosProvaApi([${v.id}],'${esc(v.prova_nome)}')">🖨 Gabarito (PDF)</button>
+            <button class="btn-small" onclick="imprimirFolhasRespostasApi([${v.id}],'${esc(v.prova_nome)}')">🖨 Folha de respostas (QR)</button>
           </div>
         </div>
       `);

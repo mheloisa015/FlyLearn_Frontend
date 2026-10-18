@@ -15,6 +15,8 @@
      4) embaixo, "Salvar resultados" + lista dos alunos que fizeram ESSA versão (o aluno escolhido já vem marcado);
         o botão chama omrScan.salvar(resultado, avaliacaoId), que grava no banco.
    Folha com QR de versão desconhecida não pode ser salva.
+   Antes de salvar, o professor pode corrigir à mão qualquer resposta lida errado (coluna "Marcada"); a nota é recalculada
+   e o que vai para omrScan.salvar já são as respostas editadas (detail.editadas = quantas foram mudadas).
    Evento 'omr:resultado' (document): detail = resumo + { uuid, origem, respostas }.
    Imprimir a folha com QR de uma versão: window.omrScan.imprimirFolha(versao.uuid, n_questoes) (n_questoes = 10 ou 20). */
 (function () {
@@ -72,6 +74,13 @@
   .scan-save .msg{flex:1 1 240px;font-size:.92rem}
   .scan-save .msg.ok{color:#14803c;font-weight:600}
   .scan-save .msg.bad{color:#c0392b}
+  .scan-edit-hint{font-size:.88rem;opacity:.85;margin:0 0 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .scan-edit-hint button{padding:5px 10px;border-radius:6px;border:1px solid #d5d9e0;background:#fff;cursor:pointer;font:inherit;font-size:.85rem}
+  .scan-edit-hint button[hidden]{display:none}
+  .scan-result select.ed{padding:5px 6px;border-radius:6px;border:1px solid #d5d9e0;font:inherit;background:#fff;min-width:64px}
+  .scan-result select.ed:disabled{opacity:.7;cursor:not-allowed}
+  .scan-result tr.editada td{background:#eef3ff}
+  .scan-result tr.editada select.ed{border-color:#1f4fd8;font-weight:700}
   `;
   document.head.appendChild(Object.assign(document.createElement('style'), { textContent: css }));
 
@@ -113,6 +122,7 @@
   const body = $q('#scBody'), vazio = $q('#scVazio'), topErr = $q('#scTopErr'), fone = $q('#scFone');
   const alunoBox = $q('#scAlunoBox'), alunoSel = $q('#scAluno'), saveBar = $q('#scSave'), saveBtn = $q('#scSaveBtn'), saveMsg = $q('#scSaveMsg');
   let stream = null, blob = null, mode = 'cam';
+  let est = null;   // resultado da leitura em edição: { linhas, resumo, info, aviso, uuid, origem, valBranco, valAnulada }
   // na correcao.html o painel só abre depois de escolher o aluno (<div id="scanMount" data-exige-alvo>)
   const mount = document.querySelector('#scanMount');
   const exigeAlvo = !!(mount && mount.hasAttribute('data-exige-alvo'));
@@ -297,6 +307,99 @@
     return { linhas: novas, resumo: { acertos: ac, erros: er, brancos: br, anuladas: an, total, nota: Math.round(ac * 1000 / total) / 100 } };
   }
 
+  const fmtNota = n => String(n).replace('.', ',');
+
+  /* recalcula acertos/erros/nota a partir das respostas (já editadas) e atualiza window.omrScan.ultimo */
+  function recalcular() {
+    let ac = 0, er = 0, br = 0, an = 0;
+    est.linhas.forEach(l => {
+      if (l.tipo === 'BRANCO') { br++; l.situacao = 'BRANCO'; }
+      else if (l.tipo === 'ANULADA') { an++; l.situacao = 'ANULADA'; }
+      else if (l.resposta_detectada === l.resposta_correta) { ac++; l.situacao = 'CORRETA'; }
+      else { er++; l.situacao = 'INCORRETA'; }
+    });
+    const total = est.linhas.length;
+    est.resumo = { acertos: ac, erros: er, brancos: br, anuladas: an, total, nota: Math.round(ac * 1000 / total) / 100 };
+  }
+
+  function sincronizar() {
+    const detalhe = Object.assign({}, est.resumo, {
+      uuid: est.uuid, origem: est.origem,
+      respostas: est.linhas.map(l => l.resposta_detectada),
+      editadas: est.linhas.filter(l => l.editada).length
+    });
+    window.omrScan.ultimo = detalhe;
+    document.dispatchEvent(new CustomEvent('omr:resultado', { detail: detalhe }));
+  }
+
+  const rotSit = s => s.charAt(0) + s.slice(1).toLowerCase();
+
+  function opcoes(l) {
+    const atual = l.tipo === 'BRANCO' ? '' : l.tipo === 'ANULADA' ? 'ANULADA' : String(l.resposta_detectada).toUpperCase();
+    const letras = 'ABCDE'.split('');
+    if (atual && atual !== 'ANULADA' && !letras.includes(atual)) letras.push(atual);
+    let h = `<option value=""${atual === '' ? ' selected' : ''}>— (em branco)</option>`;
+    h += letras.map(x => `<option value="${x}"${atual === x ? ' selected' : ''}>${x}</option>`).join('');
+    if (est.valAnulada !== undefined || l.tipo === 'ANULADA')
+      h += `<option value="ANULADA"${atual === 'ANULADA' ? ' selected' : ''}>Anulada (várias marcas)</option>`;
+    return h;
+  }
+
+  /* atualiza só os números e as células de situação (sem recriar os selects: o foco do teclado fica onde está) */
+  function atualizarPainel() {
+    const r = est.resumo, n = est.linhas.filter(l => l.editada).length;
+    res.querySelector('#scNota').textContent = fmtNota(r.nota);
+    res.querySelector('#scStats').innerHTML =
+      `<span>${r.acertos}/${r.total} acertos</span><span>${r.erros} erros</span><span>${r.brancos} em branco</span><span>${r.anuladas} anuladas</span>`;
+    est.linhas.forEach((l, i) => {
+      const tr = res.querySelector(`tr[data-i="${i}"]`);
+      tr.classList.toggle('editada', l.editada);
+      const td = tr.querySelector('.sit');
+      td.className = 'sit ' + l.situacao; td.textContent = rotSit(l.situacao);
+    });
+    const rb = res.querySelector('#scRestaurar');
+    rb.hidden = !n;
+    res.querySelector('#scEdN').textContent = n ? n + ' resposta(s) corrigida(s) à mão.' : '';
+  }
+
+  function pintar() {
+    const r = est.resumo;
+    res.innerHTML = `
+      <div class="scan-info${est.aviso ? ' warn' : ''}">${est.info}</div>
+      <div class="nota" id="scNota">${fmtNota(r.nota)}</div>
+      <div class="stats" id="scStats">
+        <span>${r.acertos}/${r.total} acertos</span>
+        <span>${r.erros} erros</span>
+        <span>${r.brancos} em branco</span>
+        <span>${r.anuladas} anuladas</span>
+      </div>
+      <p class="scan-edit-hint">✏️ <span>O leitor errou alguma? Mude a coluna <b>Marcada</b> antes de salvar; a nota é recalculada na hora.</span>
+        <span id="scEdN"></span>
+        <button type="button" id="scRestaurar" hidden>Restaurar leitura original</button></p>
+      <table>
+        <thead><tr><th>Questão</th><th>Marcada</th><th>Correta</th><th>Situação</th></tr></thead>
+        <tbody>${est.linhas.map((l, i) => `<tr data-i="${i}" class="${l.editada ? 'editada' : ''}"><td>${l.questao}</td><td><select class="ed" data-i="${i}" aria-label="Resposta marcada na questão ${l.questao}">${opcoes(l)}</select></td><td>${l.resposta_correta}</td><td class="sit ${l.situacao}">${rotSit(l.situacao)}</td></tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  res.addEventListener('change', e => {
+    const sel = e.target.closest('select.ed');
+    if (!sel || !est) return;
+    const l = est.linhas[+sel.dataset.i], v = sel.value;
+    if (v === '') { l.tipo = 'BRANCO'; l.resposta_detectada = est.valBranco; }
+    else if (v === 'ANULADA') { l.tipo = 'ANULADA'; l.resposta_detectada = est.valAnulada; }
+    else { l.tipo = 'MARCADA'; l.resposta_detectada = v; }
+    l.editada = !(l.tipo === l.tipoOrig && l.resposta_detectada === l.original);
+    recalcular(); sincronizar(); atualizarPainel();
+    if (!saveBar.hidden) { saveMsg.className = 'msg'; saveMsg.textContent = 'Respostas ajustadas à mão: confira e salve para registrar a nota.'; }
+  });
+
+  res.addEventListener('click', e => {
+    if (!e.target.closest('#scRestaurar') || !est) return;
+    est.linhas.forEach(l => { l.tipo = l.tipoOrig; l.resposta_detectada = l.original; l.editada = false; });
+    recalcular(); sincronizar(); pintar(); atualizarPainel();
+  });
+
   async function render(data) {
     let { linhas, resumo } = data;
     if (!linhas || !resumo) { res.innerHTML = '<div class="scan-empty">Folha não encontrada. Confira os 4 marcadores dos cantos.</div>'; return; }
@@ -332,24 +435,19 @@
       aviso = true; info = 'QR não lido e nenhum aluno escolhido: a nota abaixo usa o gabarito de TESTE do servidor e não pode ser salva.';
     }
 
-    const detalhe = Object.assign({}, resumo, { uuid: uuid || null, origem, respostas: linhas.map(l => l.resposta_detectada) });
-    window.omrScan.ultimo = detalhe;
-    document.dispatchEvent(new CustomEvent('omr:resultado', { detail: detalhe }));
-
-    const nota = String(resumo.nota).replace('.', ',');
-    res.innerHTML = `
-      <div class="scan-info${aviso ? ' warn' : ''}">${info}</div>
-      <div class="nota">${nota}</div>
-      <div class="stats">
-        <span>${resumo.acertos}/${resumo.total} acertos</span>
-        <span>${resumo.erros} erros</span>
-        <span>${resumo.brancos} em branco</span>
-        <span>${resumo.anuladas} anuladas</span>
-      </div>
-      <table>
-        <thead><tr><th>Questão</th><th>Marcada</th><th>Correta</th><th>Situação</th></tr></thead>
-        <tbody>${linhas.map(l => `<tr><td>${l.questao}</td><td>${l.resposta_detectada}</td><td>${l.resposta_correta}</td><td class="${l.situacao}">${l.situacao.charAt(0) + l.situacao.slice(1).toLowerCase()}</td></tr>`).join('')}</tbody>
-      </table>`;
+    // estado editável: guarda a leitura original de cada linha para poder restaurar
+    const amostra = sit => (linhas.find(l => l.situacao === sit) || {}).resposta_detectada;
+    est = {
+      info, aviso, uuid: uuid || null, origem, resumo,
+      valBranco: amostra('BRANCO') !== undefined ? amostra('BRANCO') : '',
+      valAnulada: amostra('ANULADA'),            // só dá para oferecer "Anulada" se o servidor já mandou um exemplo do formato
+      linhas: linhas.map(l => {
+        const tipo = l.situacao === 'BRANCO' ? 'BRANCO' : l.situacao === 'ANULADA' ? 'ANULADA' : 'MARCADA';
+        return Object.assign({}, l, { tipo, tipoOrig: tipo, original: l.resposta_detectada, editada: false });
+      })
+    };
+    sincronizar();
+    pintar();
 
     alunoSel.innerHTML = '';
     if (origem === 'qr' && cand.length) {
@@ -372,6 +470,7 @@
       saveMsg.className = 'msg ok';
       saveBtn.textContent = 'Resultado salvo ✓';      // continua travado: evita salvar duas vezes sem querer
       alunoSel.disabled = true;
+      res.querySelectorAll('select.ed').forEach(x => x.disabled = true);   // resultado gravado: sem edição
     } catch (e) {
       saveMsg.textContent = e.message || 'Não foi possível salvar. Tente de novo.';
       saveMsg.className = 'msg bad';
