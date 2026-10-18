@@ -3,7 +3,7 @@
 
    Backend de leitura (Render): POST {API_BASE}/corrigir, multipart:
      foto     -> imagem da folha de respostas (obrigatório)
-     gabarito -> JSON com 10 letras (a correcao.js manda o gabarito da versão do aluno escolhido)
+     gabarito -> JSON com 10 ou 20 letras (a correcao.js manda o gabarito da versão do aluno escolhido)   // <-- ALTERADO
    Resposta: { ok, linhas, resumo, qr:{lido,texto,uuid} } ou { ok:false, mensagem }.
 
    O QR da folha (FL1:<uuid da versão>) é quem identifica a VERSÃO da prova e, portanto, o GABARITO:
@@ -16,12 +16,12 @@
         o botão chama omrScan.salvar(resultado, avaliacaoId), que grava no banco.
    Folha com QR de versão desconhecida não pode ser salva.
    Evento 'omr:resultado' (document): detail = resumo + { uuid, origem, respostas }.
-   Imprimir a folha com QR de uma versão: window.omrScan.imprimirFolha(versao.uuid). */
+   Imprimir a folha com QR de uma versão: window.omrScan.imprimirFolha(versao.uuid, n_questoes) (n_questoes = 10 ou 20). */
 (function () {
   const API_BASE = (window.FLYLEARN_API || 'https://flylearn.onrender.com').replace(/\/$/, '');
   const TIMEOUT_MS = 90000;
   const MAX_LADO = 2200;      // maior lado (px) da imagem enviada; o backend usa o mesmo limite
-  const N_QUESTOES = 10;      // a folha tem 10 questões
+  const QUANTIDADES = [10, 20];   // modelos de folha que o leitor sabe ler (o backend detecta qual é pela foto)   // <-- ALTERADO
   let gabarito = null, rotulo = '';
 
   // acorda o servidor assim que a página abre (o plano grátis do Render hiberna)
@@ -308,7 +308,7 @@
       // o QR manda: versão da prova e gabarito vêm do banco, pelo UUID da folha
       let q = null, falhou = false;
       try { q = await window.omrScan.porQr(uuid); } catch (e) { falhou = true; }
-      if (q && q.letras && q.letras.length === N_QUESTOES) {
+      if (q && q.letras && q.letras.length === linhas.length) {                                       // <-- ALTERADO (era === N_QUESTOES)
         ({ linhas, resumo } = corrigirLocal(linhas, q.letras));
         cand = q.candidatos || []; sugerido = q.sugerido || null; origem = 'qr';
         podeSalvar = cand.length > 0;
@@ -316,12 +316,15 @@
         if (!cand.length) { aviso = true; info += ' Nenhum aluno com essa versão aguardando correção.'; }
         else if (!sugerido && gabarito) { aviso = true; info += ' O aluno que você escolheu (' + (rotulo || '—') + ') fez outra versão: marque abaixo o aluno desta folha.'; }
       } else if (q) {
-        aviso = true; info = 'A versão do QR tem ' + (q.letras ? q.letras.length : '?') + ' questões, mas a folha lê ' + N_QUESTOES + '.';
+        aviso = true; info = 'A versão do QR tem ' + (q.letras ? q.letras.length : '?') + ' questões, mas a folha fotografada tem ' + linhas.length + '.';   // <-- ALTERADO
       } else {
         aviso = true;
         info = falhou ? 'Não consegui consultar a versão do QR (servidor indisponível). Tente de novo.'
                       : 'QR lido, mas essa versão de prova não existe neste sistema. Confira se a folha é do FlyLearn.';
       }
+    } else if (gabarito && gabarito.length !== linhas.length) {                                       // <-- NOVO (início)
+      aviso = true;
+      info = 'QR não lido, e a folha tem ' + linhas.length + ' questões, mas a prova de ' + (rotulo || 'aluno escolhido') + ' tem ' + gabarito.length + '. Confira se fotografou a folha certa.';   // <-- NOVO (fim)
     } else if (gabarito) {
       aviso = true; origem = 'manual'; podeSalvar = true;
       info = 'QR não lido. Usei o gabarito de ' + (rotulo || '—') + ' — confira se a folha é desse aluno antes de salvar.';
@@ -388,18 +391,18 @@
         return;
       }
       const l = Array.from(letras, x => String(x).trim().toUpperCase());
-      if (l.length !== N_QUESTOES) {
+      if (!QUANTIDADES.includes(l.length)) {                                                          // <-- ALTERADO
         gabarito = null; rotulo = '';
         if (exigeAlvo) fechar();
-        showTopErr('O leitor atual corrige provas de ' + N_QUESTOES + ' questões (esta tem ' + l.length + ').');
+        showTopErr('O leitor corrige provas de ' + QUANTIDADES.join(' ou ') + ' questões (esta tem ' + l.length + ').');   // <-- ALTERADO
         return false;
       }
       gabarito = l; rotulo = r || ''; showErr('');
       abrir();
       return true;
     },
-    /* abre o PDF A4 da folha de respostas, com o QR da versão (uuid da versão da prova) */
-    imprimirFolha(uuid) { window.open(API_BASE + '/folha/' + semHifen(uuid) + '.pdf', '_blank'); },
+    /* abre o PDF A4 da folha de respostas (n = 10 ou 20 questões), com o QR da versão (uuid da versão da prova) */   // <-- ALTERADO
+    imprimirFolha(uuid, n) { window.open(API_BASE + '/folha/' + semHifen(uuid) + '.pdf?n=' + (QUANTIDADES.includes(+n) ? +n : 10), '_blank'); },   // <-- ALTERADO
     apiBase: API_BASE
   };
 
