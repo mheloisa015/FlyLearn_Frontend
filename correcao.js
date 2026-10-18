@@ -9,6 +9,11 @@
   const el = id => document.getElementById(id);
   const aviso = (box, msg) => { box.textContent = msg || ''; box.classList.toggle('show', !!msg); };
   const nota1 = n => n == null ? '—' : Number(n).toFixed(2).replace(/\.?0+$/, '').replace('.', ',');
+  // mostra o erro e rola até ele (antes o aviso ficava no topo da página, fora da tela, e parecia que o botão não fazia nada)
+  const erroVisivel = msg => {
+    aviso(el('err'), msg);
+    if (msg) el('err').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
   const hojeISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
   /* ---------- carregar ---------- */
@@ -153,18 +158,24 @@
     try {
       let letras = gabCache[a.versao_prova_id];
       if (!letras) {
+        if (!a.versao_prova_id) throw new Error('esta avaliação não tem versão de prova associada. Exclua e aplique a prova de novo.');
         const v = await api('/versoes/' + a.versao_prova_id + '/completa/');
         letras = v.itens.map(it => it.correta_letra);
-        gabCache[a.versao_prova_id] = letras;
+        if (!letras.length) throw new Error('a versão ' + (v.codigo || a.versao_codigo) + ' não tem questões.');
+        const sem = letras.map((l, i) => l ? 0 : i + 1).filter(Boolean);
+        if (sem.length) {
+          throw new Error('a versão ' + (v.codigo || a.versao_codigo) + ' tem questão sem alternativa correta marcada (questão ' + sem.join(', ') +
+            '). Marque a correta no Banco de questões e gere a versão de novo, ou aplique outra versão.');
+        }
+        gabCache[a.versao_prova_id] = letras;      // só guarda no cache quando está completo
       }
-      if (letras.some(l => !l)) throw new Error('Esta versão tem questão sem alternativa correta no gabarito.');
       const ok = window.omrScan.setGabarito(letras, `${a.aluno_nome} · ${a.prova_nome} · versão ${a.versao_codigo}`);
       if (ok === false) alvoId = null;            // ex.: prova que não tem 10 nem 20 questões (o painel explica)
       desenharTabela();
       el('scanPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (e) {
       alvoId = null; desenharTabela();
-      aviso(el('err'), 'Não foi possível carregar o gabarito: ' + e.message);
+      erroVisivel('Não foi possível abrir a correção de ' + a.aluno_nome + ': ' + e.message);
     }
   }
 
