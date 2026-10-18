@@ -112,6 +112,34 @@ async function api(path, opts) {
   return dados;
 }
 
+/* Abre uma aba nova só com o conteúdo a imprimir (cada .pg = uma folha) e manda
+   imprimir. w.onload espera a página (e as imagens, como o QR) carregarem antes
+   de chamar print() — sem isso o QR podia não aparecer a tempo. */
+function printDoc(title, html) {
+  const w = window.open('', '_blank');
+  if (!w) { alert('O navegador bloqueou a aba de impressão. Permita pop-ups para este site e tente de novo.'); return; }
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${esc(title)}</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;margin:0}
+    .pg{padding:22px 26px;page-break-after:always;box-sizing:border-box}
+    .pg:last-child{page-break-after:auto}
+    h1{font-size:1.2rem;margin:0 0 4px}
+    .mt{font-size:.88rem;color:#555;margin-bottom:10px}
+    .id{font-size:.88rem;margin:10px 0 14px;border-bottom:1px solid #ccc;padding-bottom:10px}
+    .ins{font-size:.88rem;margin:0 0 14px;font-style:italic}
+    .q{margin-bottom:14px;font-size:.92rem}
+    .o{margin:6px 0 0 18px}
+    .o div{margin-bottom:4px}
+    .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0}
+    .g{border:1px solid #ccc;border-radius:6px;padding:8px;text-align:center;font-size:.88rem}
+    .g b{display:block;font-size:.76rem;color:#555;margin-bottom:4px}
+    .ft{margin-top:18px;font-size:.76rem;color:#888}
+    @media print{ @page{ margin:14mm } }
+  </style></head><body>${html}</body></html>`);
+  w.document.close();
+  w.onload = () => { w.focus(); w.print(); };
+}
+
 /* Impressão a partir dos dados do backend (/versoes/<id>/completa/), que já vem
    com o texto das questões/alternativas e a letra da alternativa correta —
    diferente de provaPg/gabPg acima, que leem do DB mock em localStorage. */
@@ -144,7 +172,10 @@ const gabPgApi = v => `
     <div class="grid">
       ${v.itens.map(it => `<div class="g"><b>Questão ${it.ordem}</b>${it.correta_letra || '—'}</div>`).join('')}
     </div>
-    <div class="ft">Código ${v.codigo} · ${v.uuid}</div>
+    <div style="text-align:center;margin-top:20px">
+      <img src="${API_BASE}/versoes/${v.id}/qr.png" alt="QR da versão ${esc(v.codigo)}" style="width:90px;height:90px">
+    </div>
+    <div class="ft" style="text-align:center">Código ${v.codigo} · ${v.uuid}</div>
   </section>
 `;
 
