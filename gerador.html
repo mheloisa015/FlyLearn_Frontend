@@ -191,7 +191,14 @@
     };
 
     $('#nq').onchange = () => {
-      sel = new Set([...sel].slice(0, NQ()));
+      // mantém as já marcadas (até o limite) e completa com as próximas até atingir a quantidade escolhida
+      const n = NQ();
+      const nova = new Set([...sel].slice(0, n));
+      for (const q of questoesPool) {
+        if (nova.size >= n) break;
+        nova.add(q.id);
+      }
+      sel = nova;
       drawQ();
     };
 
