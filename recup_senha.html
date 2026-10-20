@@ -4,8 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- o token vai na URL: não deixa o navegador repassá-lo como Referer para outros sites -->
+    <meta name="referrer" content="no-referrer">
     <title>Recuperar senha — FlyLearn</title>
     <link rel="stylesheet" href="styles.css">
+    <style>[hidden]{display:none !important}</style>
 </head>
 <body>
     <main class="auth-wrap">
@@ -16,35 +19,156 @@
                 <span class="dot"></span>
                 FlyLearn
             </div>
-            <h1>Recuperar senha</h1>
-            <p class="sub">
-                Informe seu e-mail para receber o código de recuperação.
+            <h1 id="titulo">Recuperar senha</h1>
+            <p class="sub" id="subtitulo">
+                Informe seu e-mail para receber o link de recuperação.
             </p>
-            <form id="recoveryForm">
+
+            <!-- PASSO 1: pedir o link por e-mail -->
+            <form id="recoveryForm" novalidate>
                 <div class="auth-fields">
                     <div class="field">
                         <label for="recoveryEmail">
                             E-mail
                         </label>
-                        <input type="email" id="recoveryEmail" name="recoveryEmail" placeholder="seu@email.com" required>
+                        <input type="email" id="recoveryEmail" name="recoveryEmail" placeholder="seu@email.com" autocomplete="email" required>
                     </div>
                 </div>
                 <div class="form-actions form-actions-full">
-                    <button type="submit" class="btn-generate">Enviar código</button>
+                    <button type="submit" class="btn-generate">Enviar link</button>
                 </div>
             </form>
+
+            <!-- PASSO 2: nova senha (aparece quando a página é aberta pelo link do e-mail) -->
+            <form id="resetForm" novalidate hidden>
+                <div class="auth-fields">
+                    <div class="field">
+                        <label for="novaSenha">Nova senha</label>
+                        <input type="password" id="novaSenha" placeholder="Mínimo de 6 caracteres" autocomplete="new-password" minlength="6" required>
+                    </div>
+                    <div class="field">
+                        <label for="confirmaSenha">Confirmar nova senha</label>
+                        <input type="password" id="confirmaSenha" placeholder="Repita a nova senha" autocomplete="new-password" minlength="6" required>
+                    </div>
+                </div>
+                <div class="form-actions form-actions-full">
+                    <button type="submit" class="btn-generate">Salvar nova senha</button>
+                </div>
+            </form>
+
+            <!-- link inválido / expirado -->
+            <div id="linkInvalido" hidden>
+                <div class="error-box show">Este link é inválido, expirou ou já foi usado.</div>
+                <div class="form-actions form-actions-full">
+                    <a href="recup_senha.html" class="btn-generate" style="text-decoration:none;justify-content:center;">Solicitar novo link</a>
+                </div>
+            </div>
+
+            <div id="erro" class="error-box" role="alert"></div>
+            <div id="sucesso" class="success-box" role="status"></div>
+
             <div class="auth-foot">
                 <a href="login.html">Voltar para o login</a>
             </div>
         </section>
     </main>
     <script>
-        const recoveryForm = document.getElementById("recoveryForm");
-        recoveryForm.addEventListener("submit", function(event) {
-            event.preventDefault();
-            const email = document.getElementById("recoveryEmail").value;
-            console.log("Código enviado para:", email);
+        const API = ['localhost', '127.0.0.1'].includes(location.hostname)
+            ? 'https://flylearn.onrender.com'
+            : '/api';
+
+        const $ = (id) => document.getElementById(id);
+        const token = new URLSearchParams(location.search).get('token');
+
+        function mostrarErro(msg) { $('sucesso').classList.remove('show'); $('erro').textContent = msg; $('erro').classList.add('show'); }
+        function mostrarSucesso(msg) { $('erro').classList.remove('show'); $('sucesso').textContent = msg; $('sucesso').classList.add('show'); }
+        function limparAvisos() { $('erro').classList.remove('show'); $('sucesso').classList.remove('show'); }
+
+        async function postar(rota, corpo) {
+            const r = await fetch(API + rota, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(corpo)
+            });
+            const dados = await r.json().catch(() => ({}));
+            return { ok: r.ok, dados };
+        }
+
+        const MSG_REDE = 'Opss! Algo de errado aconteceu, tente novamente em instantes!';
+
+        // ---------- PASSO 1: pedir o link ----------
+        $('recoveryForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            limparAvisos();
+            const email = $('recoveryEmail').value.trim();
+            if (!email) { mostrarErro('Informe o e-mail da sua conta.'); return; }
+            const btn = this.querySelector('button[type=submit]');
+            btn.disabled = true; btn.textContent = 'Enviando...';
+            try {
+                const { ok, dados } = await postar('/recuperar-senha/', { email });
+                if (!ok) { mostrarErro(dados.erro || 'Não foi possível enviar o link.'); return; }
+                this.hidden = true;
+                $('subtitulo').textContent = 'Verifique sua caixa de entrada (e o spam). O link vale por 30 minutos.';
+                mostrarSucesso(dados.mensagem || 'Se esse e-mail estiver cadastrado, enviamos um link para redefinir a senha.');
+            } catch (err) {
+                mostrarErro(MSG_REDE);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Enviar link';
+            }
         });
+
+        // ---------- PASSO 2: nova senha ----------
+        $('resetForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            limparAvisos();
+            const senha = $('novaSenha').value;
+            if (senha.length < 6) { mostrarErro('A senha deve ter pelo menos 6 caracteres!'); return; }
+            if (senha !== $('confirmaSenha').value) { mostrarErro('As senhas não conferem.'); return; }
+            const btn = this.querySelector('button[type=submit]');
+            btn.disabled = true; btn.textContent = 'Salvando...';
+            try {
+                const { ok, dados } = await postar('/redefinir-senha/', { token, senha });
+                if (!ok) {
+                    if (dados.campo === 'token') { mostrarLinkInvalido(); return; }
+                    mostrarErro(dados.erro || 'Não foi possível alterar a senha.');
+                    return;
+                }
+                this.hidden = true;
+                $('subtitulo').textContent = '';
+                mostrarSucesso('Senha alterada com sucesso! Redirecionando para o login...');
+                setTimeout(() => { location.href = 'login.html'; }, 2500);
+            } catch (err) {
+                mostrarErro(MSG_REDE);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Salvar nova senha';
+            }
+        });
+
+        function mostrarLinkInvalido() {
+            $('recoveryForm').hidden = true;
+            $('resetForm').hidden = true;
+            limparAvisos();
+            $('subtitulo').textContent = '';
+            $('linkInvalido').hidden = false;
+        }
+
+        // ---------- ao abrir a página ----------
+        (async function iniciar() {
+            if (!token) return;                       // sem token: fica no passo 1
+            $('recoveryForm').hidden = true;
+            $('titulo').textContent = 'Criar nova senha';
+            $('subtitulo').textContent = 'Verificando seu link...';
+            try {
+                const { ok } = await postar('/recuperar-senha/validar/', { token });
+                if (!ok) { mostrarLinkInvalido(); return; }
+                $('subtitulo').textContent = 'Escolha uma nova senha para a sua conta.';
+                $('resetForm').hidden = false;
+                $('novaSenha').focus();
+            } catch (err) {
+                $('subtitulo').textContent = '';
+                mostrarErro(MSG_REDE);
+            }
+        })();
     </script>
 </body>
 </html>
