@@ -247,15 +247,20 @@
         professor_id: PROF.id
       });
       try {
-        if (editTurma) await api('/turmas/' + editTurma + '/', { method: 'PUT', body });
-        else await api('/turmas/', { method: 'POST', body });
+        if (editTurma) {
+          await api('/turmas/' + editTurma + '/', { method: 'PUT', body });
+          toast('Turma atualizada com sucesso!', 'sucesso');
+        } else {
+           await api('/turmas/', { method: 'POST', body });
+           toast('Turma cadastrada com sucesso!', 'sucesso');
+          }
         editTurma = null;
         e.target.reset();
         $('#form-turma button[type=submit]').textContent = 'Salvar turma';
         await load();
       } catch (err) {
-        toast(err.message);
-      }
+          toast(err.message);
+        }
     });
 
     $('#form-aluno').addEventListener('submit', async e => {
