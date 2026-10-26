@@ -272,15 +272,20 @@
         email: $('#aluno-email').value
       });
       try {
-        if (editAluno) await api('/alunos/' + editAluno + '/', { method: 'PUT', body });
-        else await api('/alunos/', { method: 'POST', body });
+        if (editAluno) {
+        await api('/alunos/' + editAluno + '/', { method: 'PUT', body });
+        toast('Aluno atualizado com sucesso!', 'sucesso');
+      } else {
+          await api('/alunos/', { method: 'POST', body });
+          toast('Aluno cadastrado com sucesso!', 'sucesso');
+        }
         editAluno = null;
         e.target.reset();
         $('#form-aluno button[type=submit]').textContent = 'Salvar aluno';
         await load();
       } catch (err) {
-        toast(err.message);
-      }
+    toast(err.message);
+    }
     });
 
     $('#filtro-turma').addEventListener('change', draw);
