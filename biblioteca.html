@@ -125,7 +125,7 @@
         await api('/provas/' + pid + '/', { method: 'DELETE' });
         draw();
       } catch (e) {
-        alert(e.message);
+        toast(e.message);
       }
     }
 
@@ -134,7 +134,7 @@
       try {
         v = await api('/versoes/' + i + '/completa/', {});
       } catch (e) {
-        return alert(e.message);
+        return toast(e.message);
       }
       modal(`
         <div class="worksheet">
@@ -171,9 +171,9 @@
       try {
         turmas = (await api('/turmas/?professor_id=' + PROF.id, {})).turmas || [];
       } catch (e) {
-        return alert(e.message);
+        return toast(e.message);
       }
-      if (!turmas.length) return alert('Cadastre uma turma antes, em Turmas e alunos.');
+      if (!turmas.length) return toast('Cadastre uma turma antes, em Turmas e alunos.');
       modal(`
         <div class="modal-form-card">
           <h2>Aplicar prova</h2>
@@ -214,7 +214,7 @@
           box.textContent = e.message;
           box.classList.add('show');
         } else {
-          alert(e.message);
+          toast(e.message);
         }
         btn.disabled = false;
       }

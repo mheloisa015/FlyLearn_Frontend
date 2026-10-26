@@ -155,7 +155,7 @@
         turmas = d.turmas;
         alunos = d.alunos;
       } catch (e) {
-        alert(e.message);
+        toast(e.message);
       }
       draw();
     }
@@ -214,7 +214,7 @@
         await api('/turmas/' + i + '/', { method: 'DELETE' });
         await load();
       } catch (e) {
-        alert(e.message);
+        toast(e.message);
       }
     }
 
@@ -235,7 +235,7 @@
         await api('/alunos/' + i + '/', { method: 'DELETE' });
         await load();
       } catch (e) {
-        alert(e.message);
+        toast(e.message);
       }
     }
 
@@ -254,7 +254,7 @@
         $('#form-turma button[type=submit]').textContent = 'Salvar turma';
         await load();
       } catch (err) {
-        alert(err.message);
+        toast(err.message);
       }
     });
 
@@ -274,7 +274,7 @@
         $('#form-aluno button[type=submit]').textContent = 'Salvar aluno';
         await load();
       } catch (err) {
-        alert(err.message);
+        toast(err.message);
       }
     });
 

@@ -73,6 +73,29 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({
   '"': '&quot;'
 }[c]));
 
+/* Popup de erro/sucesso/aviso no canto da tela, no lugar do alert() nativo do
+   navegador. Some sozinho depois de alguns segundos ou ao clicar no ✕.
+   Uso: toast('Mensagem de erro')  |  toast('Salvo!', 'sucesso')  |  toast('Atenção...', 'aviso') */
+function toast(msg, tipo = 'erro') {
+  let wrap = $('.toast-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.className = 'toast-wrap';
+    document.body.appendChild(wrap);
+  }
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + tipo;
+  t.innerHTML = `<span>${esc(msg)}</span><button type="button" aria-label="Fechar">✕</button>`;
+  const fechar = () => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 220);
+  };
+  t.querySelector('button').onclick = fechar;
+  wrap.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(fechar, 6000);
+}
+
 const by = (t, i) => DB[t].find(x => x.id == i);
 
 const shuffle = a => {
@@ -117,7 +140,7 @@ async function api(path, opts) {
    de chamar print() — sem isso o QR podia não aparecer a tempo. */
 function printDoc(title, html, extraCss) {
   const w = window.open('', '_blank');
-  if (!w) { alert('O navegador bloqueou a aba de impressão. Permita pop-ups para este site e tente de novo.'); return; }
+  if (!w) { toast('O navegador bloqueou a aba de impressão. Permita pop-ups para este site e tente de novo.'); return; }
   w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${esc(title)}</title>
   <style>
     body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;margin:0}
@@ -278,9 +301,9 @@ function folhaRespostasPgApi(v, aluno) {
 async function imprimirFolhasRespostasApi(ids, tituloProva, aluno) {
   let vs;
   try { vs = await Promise.all(ids.map(i => api('/versoes/' + i + '/completa/'))); }
-  catch (e) { return alert('Não foi possível montar a folha de respostas: ' + e.message); }
+  catch (e) { return toast('Não foi possível montar a folha de respostas: ' + e.message); }
   const ruim = vs.find(v => ![10, 20].includes(v.itens.length));
-  if (ruim) return alert('A folha de respostas existe para provas de 10 ou 20 questões (a versão ' + ruim.codigo + ' tem ' + ruim.itens.length + ').');
+  if (ruim) return toast('A folha de respostas existe para provas de 10 ou 20 questões (a versão ' + ruim.codigo + ' tem ' + ruim.itens.length + ').');
   printDoc('Folha de respostas ' + (tituloProva || '') + (vs.length == 1 ? ' ' + vs[0].codigo : ''), vs.map(v => folhaRespostasPgApi(v, aluno)).join(''), FOLHA_CSS);
 }
 

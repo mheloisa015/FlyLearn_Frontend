@@ -102,7 +102,7 @@
         questoes = await api('/questoes/');
         provas = await api('/provas/?professor_id=' + PROF.id);
       } catch (e) {
-        alert(e.message);
+        toast(e.message);
       }
       draw();
     }
@@ -159,7 +159,7 @@
     async function del(i) {
       const m = materias.find(x => x.id == i);
       if (questoes.some(x => x.materia_id == i) || provas.some(p => p.materia_id == i)) {
-        return alert('Não é possível excluir: há questões ou provas vinculadas a esta matéria.');
+        return toast('Não é possível excluir: há questões ou provas vinculadas a esta matéria.');
       }
       if (!confirm('Excluir a matéria “' + m.nome + '”?')) return;
 
@@ -168,7 +168,7 @@
         if (editId == i) reset();
         await load();
       } catch (e) {
-        alert(e.message);
+        toast(e.message);
       }
     }
 

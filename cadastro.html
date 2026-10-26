@@ -32,6 +32,7 @@
   </div>
 
 
+  <script src="app.js"></script>
   <script>
     const API = ['localhost', '127.0.0.1'].includes(location.hostname)
       ? 'https://flylearn.onrender.com'
@@ -52,11 +53,11 @@
           })
         });
         const dados = await r.json().catch(() => ({}));
-        if (!r.ok) { alert(dados.erro || 'Não foi possível criar a conta.'); return; }
+        if (!r.ok) { toast(dados.erro || 'Não foi possível criar a conta.'); return; }
         localStorage.setItem('flylearn_user', JSON.stringify(dados));
         window.location.href = 'dashboard.html';
       } catch (err) {
-        alert('Opps! Algo deu errado, tente novamente mais tarde!');
+        toast('Opss! Algo deu errado, tente novamente mais tarde!');
       } finally {
         btn.disabled = false; btn.textContent = 'Criar conta';
       }

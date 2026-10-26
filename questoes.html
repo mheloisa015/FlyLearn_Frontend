@@ -241,7 +241,7 @@
         await api('/questoes/' + i + '/', { method: 'PATCH', body: JSON.stringify({ ativo: !q.ativo }) });
         draw();
       } catch (e) {
-        alert(e.message);
+        toast(e.message);
       }
     }
 
@@ -252,7 +252,7 @@
         if (editId == i) reset();
         draw();
       } catch (e) {
-        alert(e.message);
+        toast(e.message);
       }
     }
 
