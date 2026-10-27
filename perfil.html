@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu perfil — FlyLearn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="styles.css">
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..900&family=Caveat:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .perfil-hero{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+    .perfil-avatar{width:84px;height:84px;border-radius:50%;background:var(--ink-blue);color:#fff;
+      display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;
+      font-family:'Raleway',sans-serif;flex-shrink:0;letter-spacing:.02em}
+    .perfil-info{flex:1;min-width:200px}
+    .perfil-info h2{margin:0 0 4px;font-size:1.4rem}
+    .perfil-info .perfil-email{color:var(--ink-light);font-size:.95rem;word-break:break-all}
+    .perfil-info .perfil-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;
+      font-size:.84rem;color:var(--ink-light)}
+    .perfil-stats{margin:24px 0}
+    .perfil-stats .stat-grid{margin-bottom:0}
+    .perfil-section{margin-bottom:24px}
+    .pw-wrap{position:relative}
+    .pw-wrap input{width:100%;padding-right:46px;box-sizing:border-box}
+    .pw-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;
+      cursor:pointer;font-size:1rem;padding:6px 8px;color:var(--ink-light)}
+    .pw-toggle:hover{color:var(--ink-blue)}
+    .field-error{color:var(--red);font-size:.78rem;min-height:1em}
+    .perfil-vazio{color:var(--ink-light);font-size:.9rem;padding:8px 0}
+    .perfil-danger{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+    .perfil-danger p{margin:0;color:var(--ink-light);font-size:.9rem}
+    .skeleton{opacity:.45}
+    @media (max-width:560px){
+      .perfil-hero{flex-direction:column;align-items:flex-start}
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="nav-brand" href="dashboard.html"><span class="dot"></span>FlyLearn</a>
+      <nav aria-label="Principal">
+        <a href="dashboard.html"><span class="ic">🏠</span>Painel</a>
+        <a href="turmas.html"><span class="ic">👥</span>Turmas e alunos</a>
+        <a href="materias.html"><span class="ic">🗂️</span>Matérias</a>
+        <a href="questoes.html"><span class="ic">❓</span>Banco de questões</a>
+        <a href="gerador.html"><span class="ic">✏️</span>Montar prova</a>
+        <a href="biblioteca.html"><span class="ic">📚</span>Minhas provas</a>
+        <a href="correcao.html"><span class="ic">🧾</span>Aplicações e correção</a>
+        <a class="active" href="perfil.html" aria-current="page"><span class="ic">⚙️</span>Perfil</a>
+      </nav>
+      <div class="sidebar-foot">
+        <a href="index.html"><span class="ic">↩</span>Sair</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1>Meu perfil</h1>
+          <div class="topbar-sub">Gerencie seus dados de acesso e acompanhe o resumo da sua conta.</div>
+        </div>
+        <div class="avatar" id="topo-avatar" title="Meu perfil">P</div>
+      </div>
+
+      <div class="content">
+
+        <!-- Cabeçalho do perfil -->
+        <div class="panel">
+          <div class="perfil-hero">
+            <div class="perfil-avatar" id="perfil-avatar" aria-hidden="true">P</div>
+            <div class="perfil-info">
+              <h2 id="perfil-nome">Carregando…</h2>
+              <div class="perfil-email" id="perfil-email"></div>
+              <div class="perfil-meta">
+                <span class="tag tag-green" id="perfil-status">Conta ativa</span>
+                <span id="perfil-desde"></span>
+              </div>
+            </div>
+            <a class="btn-small" href="correcao.html?status=aplicada" id="perfil-pendentes" hidden></a>
+          </div>
+        </div>
+
+        <!-- Resumo (dados reais vindos da API, filtrados pelo professor logado) -->
+        <div class="perfil-stats">
+          <div class="stat-grid" id="perfil-stats">
+            <div class="stat-card"><div class="stat-num" data-s="turmas">—</div><div class="stat-label">Turmas</div><div class="stat-hint" data-h="turmas"></div></div>
+            <div class="stat-card"><div class="stat-num" data-s="alunos">—</div><div class="stat-label">Alunos</div><div class="stat-hint">em todas as turmas</div></div>
+            <div class="stat-card"><div class="stat-num" data-s="materias">—</div><div class="stat-label">Matérias</div><div class="stat-hint">cadastradas</div></div>
+            <div class="stat-card"><div class="stat-num" data-s="provas">—</div><div class="stat-label">Provas criadas</div><div class="stat-hint" data-h="versoes"></div></div>
+          </div>
+        </div>
+
+        <div class="two-col perfil-section">
+          <!-- Dados pessoais -->
+          <div class="panel">
+            <h2>Dados pessoais</h2>
+            <p class="sub">Atualize seu nome e e-mail de acesso.</p>
+            <form id="form-dados" novalidate>
+              <div class="form-grid">
+                <div class="field full">
+                  <label for="p-nome">Nome completo</label>
+                  <input type="text" id="p-nome" name="nome" maxlength="150" autocomplete="name" required>
+                  <span class="field-error" data-erro="nome"></span>
+                </div>
+                <div class="field full">
+                  <label for="p-email">E-mail</label>
+                  <input type="email" id="p-email" name="email" autocomplete="email" required>
+                  <span class="field-error" data-erro="email"></span>
+                </div>
+                <div class="field full" id="wrap-senha-atual" hidden>
+                  <label for="p-senha-confirma">Senha atual</label>
+                  <div class="pw-wrap">
+                    <input type="password" id="p-senha-confirma" name="senha_atual" autocomplete="current-password" placeholder="Necessária para trocar o e-mail">
+                    <button type="button" class="pw-toggle" data-alvo="p-senha-confirma" aria-label="Mostrar senha">👁</button>
+                  </div>
+                  <span class="hint">Por segurança, confirme sua senha para alterar o e-mail.</span>
+                  <span class="field-error" data-erro="senha_atual"></span>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn-small" id="btn-desfazer-dados">Desfazer</button>
+                <button type="submit" class="btn-generate" id="btn-salvar-dados">Salvar alterações</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Senha -->
+          <div class="panel">
+            <h2>Alterar senha</h2>
+            <p class="sub">Use pelo menos 6 caracteres.</p>
+            <form id="form-senha" novalidate>
+              <div class="form-grid">
+                <div class="field full">
+                  <label for="s-atual">Senha atual</label>
+                  <div class="pw-wrap">
+                    <input type="password" id="s-atual" autocomplete="current-password" required>
+                    <button type="button" class="pw-toggle" data-alvo="s-atual" aria-label="Mostrar senha">👁</button>
+                  </div>
+                  <span class="field-error" data-erro="senha_atual"></span>
+                </div>
+                <div class="field full">
+                  <label for="s-nova">Nova senha</label>
+                  <div class="pw-wrap">
+                    <input type="password" id="s-nova" autocomplete="new-password" minlength="6" required>
+                    <button type="button" class="pw-toggle" data-alvo="s-nova" aria-label="Mostrar senha">👁</button>
+                  </div>
+                  <span class="field-error" data-erro="nova_senha"></span>
+                </div>
+                <div class="field full">
+                  <label for="s-confirma">Confirmar nova senha</label>
+                  <div class="pw-wrap">
+                    <input type="password" id="s-confirma" autocomplete="new-password" required>
+                    <button type="button" class="pw-toggle" data-alvo="s-confirma" aria-label="Mostrar senha">👁</button>
+                  </div>
+                  <span class="field-error" data-erro="confirma"></span>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="reset" class="btn-small">Limpar</button>
+                <button type="submit" class="btn-generate" id="btn-salvar-senha">Atualizar senha</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Turmas e matérias -->
+        <div class="two-col perfil-section" style="grid-template-columns:1fr 1fr">
+          <div class="panel">
+            <div class="panel-head">
+              <div><h2>Minhas turmas</h2><p class="sub">Ano, disciplina e alunos.</p></div>
+              <a class="panel-link" href="turmas.html">Gerenciar</a>
+            </div>
+            <div class="mini-list" id="perfil-turmas"><div class="perfil-vazio skeleton">Carregando…</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div><h2>Minhas matérias</h2><p class="sub">Disciplinas com banco de questões.</p></div>
+              <a class="panel-link" href="materias.html">Gerenciar</a>
+            </div>
+            <div class="mini-list" id="perfil-materias"><div class="perfil-vazio skeleton">Carregando…</div></div>
+          </div>
+        </div>
+
+        <!-- Sair -->
+        <div class="panel">
+          <div class="perfil-danger">
+            <div>
+              <h2 style="margin-bottom:4px">Sessão</h2>
+              <p>Encerre sua sessão neste navegador.</p>
+            </div>
+            <button type="button" class="btn-danger-ghost" id="btn-sair">Sair da conta</button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+<script>
+(function () {
+  const $id = x => document.getElementById(x);
+  let user = {};
+  try { user = JSON.parse(localStorage.getItem('flylearn_user')) || {}; } catch (e) {}
+  const PID = user.id;
+  let original = { nome: user.nome || '', email: user.email || '' };
+
+  const iniciais = nome => {
+    const p = String(nome || '').trim().split(/\s+/).filter(Boolean);
+    if (!p.length) return 'P';
+    return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+  };
+
+  function pintarCabecalho(u) {
+    const ini = iniciais(u.nome);
+    $id('perfil-avatar').textContent = ini;
+    $id('topo-avatar').textContent = ini[0];
+    $id('perfil-nome').textContent = u.nome || 'Professor(a)';
+    $id('perfil-email').textContent = u.email || '';
+    const ativo = u.ativo !== false;
+    const st = $id('perfil-status');
+    st.textContent = ativo ? 'Conta ativa' : 'Conta desativada';
+    st.className = 'tag ' + (ativo ? 'tag-green' : 'tag-red');
+    if (u.created_at) {
+      const d = new Date(u.created_at);
+      if (!isNaN(d)) $id('perfil-desde').textContent = 'Membro desde ' +
+        d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    }
+  }
+
+  function preencherForm(u) {
+    $id('p-nome').value = u.nome || '';
+    $id('p-email').value = u.email || '';
+    $id('p-senha-confirma').value = '';
+    $id('wrap-senha-atual').hidden = true;
+    limparErros();
+  }
+
+  function limparErros() {
+    document.querySelectorAll('.field-error').forEach(e => e.textContent = '');
+  }
+  function erroCampo(form, campo, msg) {
+    const el = form.querySelector('[data-erro="' + campo + '"]');
+    if (el) el.textContent = msg;
+  }
+
+  // Salva o professor atualizado na sessão (mantém o que o login já guardou)
+  function atualizarSessao(novo) {
+    user = Object.assign({}, user, novo);
+    try { localStorage.setItem('flylearn_user', JSON.stringify(user)); } catch (e) {}
+    original = { nome: user.nome || '', email: user.email || '' };
+  }
+
+  // ---- Mostrar/ocultar senha
+  document.querySelectorAll('.pw-toggle').forEach(b => {
+    b.addEventListener('click', () => {
+      const i = $id(b.dataset.alvo);
+      const mostrar = i.type === 'password';
+      i.type = mostrar ? 'text' : 'password';
+      b.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+      b.textContent = mostrar ? '🙈' : '👁';
+    });
+  });
+
+  // ---- Pede a senha atual só quando o e-mail muda
+  $id('p-email').addEventListener('input', () => {
+    const mudou = $id('p-email').value.trim().toLowerCase() !== String(original.email).toLowerCase();
+    $id('wrap-senha-atual').hidden = !mudou;
+  });
+
+  $id('btn-desfazer-dados').addEventListener('click', () => preencherForm(original));
+
+  // ---- Salvar dados pessoais
+  $id('form-dados').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    limparErros();
+    const nome = $id('p-nome').value.trim();
+    const email = $id('p-email').value.trim().toLowerCase();
+    const mudouEmail = email !== String(original.email).toLowerCase();
+    const senha_atual = $id('p-senha-confirma').value;
+
+    if (!nome) return erroCampo(this, 'nome', 'Informe seu nome completo.');
+    if (!/^\S+@\S+\.\S+$/.test(email)) return erroCampo(this, 'email', 'E-mail inválido.');
+    if (mudouEmail && !senha_atual) return erroCampo(this, 'senha_atual', 'Informe sua senha atual.');
+    if (nome === original.nome && !mudouEmail) return toast('Nenhuma alteração para salvar.', 'aviso');
+
+    const btn = $id('btn-salvar-dados');
+    btn.disabled = true; btn.textContent = 'Salvando…';
+    try {
+      const corpo = { nome, email };
+      if (mudouEmail) corpo.senha_atual = senha_atual;
+      const novo = await api('/professores/' + PID + '/', { method: 'PUT', body: JSON.stringify(corpo) });
+      atualizarSessao(novo);
+      pintarCabecalho(user);
+      preencherForm(user);
+      toast('Dados atualizados com sucesso!', 'sucesso');
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar alterações';
+    }
+  });
+
+  // ---- Alterar senha
+  $id('form-senha').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    limparErros();
+    const atual = $id('s-atual').value;
+    const nova = $id('s-nova').value;
+    const conf = $id('s-confirma').value;
+
+    if (!atual) return erroCampo(this, 'senha_atual', 'Informe sua senha atual.');
+    if (nova.length < 6) return erroCampo(this, 'nova_senha', 'A nova senha deve ter pelo menos 6 caracteres.');
+    if (nova === atual) return erroCampo(this, 'nova_senha', 'A nova senha deve ser diferente da atual.');
+    if (nova !== conf) return erroCampo(this, 'confirma', 'As senhas não conferem.');
+
+    const btn = $id('btn-salvar-senha');
+    btn.disabled = true; btn.textContent = 'Atualizando…';
+    try {
+      await api('/professores/' + PID + '/senha/', {
+        method: 'PUT',
+        body: JSON.stringify({ senha_atual: atual, nova_senha: nova })
+      });
+      this.reset();
+      toast('Senha atualizada com sucesso!', 'sucesso');
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Atualizar senha';
+    }
+  });
+
+  // ---- Sair
+  $id('btn-sair').addEventListener('click', () => {
+    localStorage.removeItem('flylearn_user');
+    location.href = 'index.html';
+  });
+
+  // ---- Resumo da conta (turmas, alunos, matérias, provas, pendências)
+  const set = (k, v) => { const el = document.querySelector('[data-s="' + k + '"]'); if (el) el.textContent = v; };
+  const hint = (k, v) => { const el = document.querySelector('[data-h="' + k + '"]'); if (el) el.textContent = v; };
+  const plural = (n, s, p) => n + ' ' + (n === 1 ? s : p);
+
+  async function carregarResumo() {
+    const q = '?professor_id=' + encodeURIComponent(PID);
+    const [rt, rm, rp, ra] = await Promise.allSettled([
+      api('/turmas/' + q),
+      api('/materias/' + q),
+      api('/provas/' + q),
+      api('/avaliacoes/' + q + '&status=aplicada')
+    ]);
+
+    if (rt.status === 'fulfilled') {
+      const turmas = rt.value.turmas || [], alunos = rt.value.alunos || [];
+      set('turmas', turmas.length);
+      set('alunos', alunos.length);
+      hint('turmas', turmas.length ? 'em ' + plural(new Set(turmas.map(t => t.disciplina)).size, 'disciplina', 'disciplinas') : 'nenhuma ainda');
+      const cont = {};
+      alunos.forEach(a => cont[a.turma_id] = (cont[a.turma_id] || 0) + 1);
+      $id('perfil-turmas').innerHTML = turmas.length
+        ? turmas.map(t => `<div class="mini-item"><div><h4>${esc(t.ano)}º ano</h4><div class="meta">${esc(t.disciplina)}</div></div><span class="count">${plural(cont[t.id] || 0, 'aluno', 'alunos')}</span></div>`).join('')
+        : '<div class="perfil-vazio">Você ainda não criou nenhuma turma. <a href="turmas.html">Criar turma</a></div>';
+    } else {
+      set('turmas', '—'); set('alunos', '—');
+      $id('perfil-turmas').innerHTML = '<div class="perfil-vazio">Não foi possível carregar as turmas.</div>';
+    }
+
+    if (rm.status === 'fulfilled') {
+      const ms = rm.value || [];
+      set('materias', ms.length);
+      $id('perfil-materias').innerHTML = ms.length
+        ? ms.map(m => `<div class="mini-item"><div><h4>${esc(m.nome)}</h4><div class="meta">${esc(m.descricao || 'Sem descrição')}</div></div></div>`).join('')
+        : '<div class="perfil-vazio">Você ainda não cadastrou matérias. <a href="materias.html">Cadastrar matéria</a></div>';
+    } else {
+      set('materias', '—');
+      $id('perfil-materias').innerHTML = '<div class="perfil-vazio">Não foi possível carregar as matérias.</div>';
+    }
+
+    if (rp.status === 'fulfilled') {
+      const ps = rp.value || [];
+      set('provas', ps.length);
+      const nv = ps.reduce((s, p) => s + (p.versoes || []).length, 0);
+      hint('versoes', plural(nv, 'versão gerada', 'versões geradas'));
+    } else { set('provas', '—'); }
+
+    if (ra.status === 'fulfilled') {
+      const n = (ra.value || []).filter(a => a.nota == null).length;
+      if (n > 0) {
+        const b = $id('perfil-pendentes');
+        b.textContent = plural(n, 'avaliação aguardando correção', 'avaliações aguardando correção');
+        b.hidden = false;
+      }
+    }
+  }
+
+  // ---- Início: mostra o que já temos da sessão e completa com a API
+  pintarCabecalho(user);
+  preencherForm(user);
+  if (!PID) return;
+
+  api('/professores/' + PID + '/').then(p => {
+    atualizarSessao(p);
+    pintarCabecalho(user);
+    preencherForm(user);
+  }).catch(() => { /* mantém os dados da sessão */ });
+
+  carregarResumo();
+})();
+</script>
+</body>
+</html>
