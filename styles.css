@@ -2812,3 +2812,5 @@ button:active{
     .alvo{font-size:.92rem;margin-bottom:12px}
     .success-box{display:none}
     @media(max-width:900px){.sidebar{display:none}.app-shell{display:block}}
+/* garante que o atributo [hidden] sempre esconda o elemento, mesmo com display:flex/inline-block definido */
+[hidden]{display:none !important}
