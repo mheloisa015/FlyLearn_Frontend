@@ -311,7 +311,7 @@ function layout(active, title, sub) {
   document.body.innerHTML = `
     <div class="app-shell">
       <aside class="sidebar">
-        <a class="nav-brand" href="dashboard.html"><span class="dot"></span>FlyLearn</a>
+        <a class="nav-brand" href="dashboard.html"><img class="logo-mark" src="img/logo-icone-branco.png" alt="" width="32" height="32">FlyLearn</a>
         <nav aria-label="Principal">
           ${NAV.map(n => `<a href="${n[0]}.html"${n[0] == active ? ' class="active" aria-current="page"' : ''}><span class="ic">${n[1]}</span>${n[2]}</a>`).join('')}
         </nav>
