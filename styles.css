@@ -2814,3 +2814,8 @@ button:active{
     @media(max-width:900px){.sidebar{display:none}.app-shell{display:block}}
 /* garante que o atributo [hidden] sempre esconda o elemento, mesmo com display:flex/inline-block definido */
 [hidden]{display:none !important}
+
+/* ===== Logo FlyLearn ===== */
+.logo-mark{width:32px;height:32px;object-fit:contain;display:block;flex-shrink:0}
+.logo-full{height:56px;width:auto;display:block}
+.auth-brand .logo-full{margin-bottom:0}
