@@ -127,6 +127,7 @@
       try {
         await api('/provas/' + pid + '/', { method: 'DELETE' });
         draw();
+        toast('Prova excluída com sucesso!', 'sucesso');
       } catch (e) {
         toast(e.message);
       }

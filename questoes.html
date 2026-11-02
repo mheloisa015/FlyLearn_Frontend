@@ -243,6 +243,7 @@
       try {
         await api('/questoes/' + i + '/', { method: 'PATCH', body: JSON.stringify({ ativo: !q.ativo }) });
         draw();
+        toast(q.ativo ? 'Questão desativada com sucesso!' : 'Questão ativada com sucesso!', 'sucesso');
       } catch (e) {
         toast(e.message);
       }
@@ -254,6 +255,7 @@
         await api('/questoes/' + i + '/', { method: 'DELETE' });
         if (editId == i) reset();
         draw();
+        toast('Questão excluída com sucesso!', 'sucesso');
       } catch (e) {
         toast(e.message);
       }
@@ -280,8 +282,13 @@
       btn.disabled = true;
 
       try {
-        if (editId) await api('/questoes/' + editId + '/', { method: 'PATCH', body: JSON.stringify(payload) });
-        else await api('/questoes/', { method: 'POST', body: JSON.stringify(payload) });
+        if (editId) {
+          await api('/questoes/' + editId + '/', { method: 'PATCH', body: JSON.stringify(payload) });
+          toast('Questão atualizada com sucesso!', 'sucesso');
+        } else {
+          await api('/questoes/', { method: 'POST', body: JSON.stringify(payload) });
+          toast('Questão cadastrada com sucesso!', 'sucesso');
+        }
         reset();
         await draw();
       } catch (ex) {

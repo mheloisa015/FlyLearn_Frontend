@@ -170,6 +170,7 @@
         await api('/materias/' + i + '/', { method: 'DELETE' });
         if (editId == i) reset();
         await load();
+        toast('Matéria excluída com sucesso!', 'sucesso');
       } catch (e) {
         toast(e.message);
       }
@@ -197,8 +198,13 @@
       });
 
       try {
-        if (editId) await api('/materias/' + editId + '/', { method: 'PUT', body });
-        else await api('/materias/', { method: 'POST', body });
+        if (editId) {
+          await api('/materias/' + editId + '/', { method: 'PUT', body });
+          toast('Matéria atualizada com sucesso!', 'sucesso');
+        } else {
+          await api('/materias/', { method: 'POST', body });
+          toast('Matéria cadastrada com sucesso!', 'sucesso');
+        }
         reset();
         await load();
       } catch (e) {
