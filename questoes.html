@@ -11,6 +11,17 @@
 <link rel="stylesheet" href="styles.css">
   <script src="auth.js"></script>
   <script src="app.js"></script>
+  <style>
+    @media (max-width: 700px) {
+      #list tr:not(.vazio) { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "n s" "e e" "x x"; gap: 6px 12px; align-items: center; }
+      #list td { padding: 0; }
+      #list td:nth-child(1) { grid-area: n; }
+      #list td:nth-child(2) { grid-area: e; }
+      #list td:nth-child(3) { grid-area: s; justify-self: end; }
+      #list td:nth-child(4) { grid-area: x; padding-top: 4px; }
+      #list td[colspan] { grid-column: 1 / -1; }
+    }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -45,7 +56,7 @@
 
           <div class="panel">
             <h2 id="ft">Nova questão</h2>
-            <p class="sub">Tabelas <b>questao</b> e <b>alternativa</b>.</p>
+            <p class="sub">Use de 2 a 5 alternativas, de A até E.</p>
             <div class="form-grid">
               <div class="field full">
                 <label for="qm">Matéria</label>
@@ -60,6 +71,7 @@
                 <div id="alts"></div>
                 <div>
                   <button type="button" class="btn-small" id="addAlt">+ Alternativa</button>
+                  <p class="alt-limit" id="altLimit" hidden>Limite de 5 alternativas (A–E).</p>
                 </div>
               </div>
               <div class="field full">
@@ -78,7 +90,7 @@
           <div class="panel">
             <h2>Questões cadastradas</h2>
             <p class="sub" id="count"></p>
-            <div class="form-grid" style="margin:12px 0 16px;grid-template-columns:1fr 1fr">
+            <div class="filters-grid">
               <div class="field">
                 <label for="fm">Matéria</label>
                 <select id="fm"></select>
@@ -100,9 +112,9 @@
               <table class="aluno-table">
                 <thead>
                   <tr>
-                    <th>Nº</th>
-                    <th>Enunciado</th>
-                    <th>Status</th>
+                    <th data-nolabel>Nº</th>
+                    <th data-nolabel>Enunciado</th>
+                    <th data-nolabel>Status</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -128,21 +140,33 @@
       { texto: '', correta: true },
       { texto: '', correta: false },
       { texto: '', correta: false },
+      { texto: '', correta: false },
       { texto: '', correta: false }
     ];
+    const MAX_ALTS = L.length;   // A–E
 
     function drawAlts() {
       $('#alts').innerHTML = rows.map((r, i) => `
-        <div class="alt-row">
-          <input type="radio" name="ok" ${r.correta ? 'checked' : ''} onchange="rows.forEach((x,k)=>x.correta=k==${i})" aria-label="Alternativa ${L[i]} correta">
-          <span class="lt">${L[i]}</span>
+        <div class="alt-row${r.correta ? ' is-correct' : ''}">
+          <label class="alt-pick" title="Marcar a alternativa ${L[i]} como correta">
+            <input type="radio" name="ok" ${r.correta ? 'checked' : ''} onchange="marcarCorreta(${i})" aria-label="Alternativa ${L[i]} é a correta">
+            <span class="lt" aria-hidden="true">${L[i]}</span>
+          </label>
           <div class="field">
-            <input type="text" value="${esc(r.texto)}" oninput="rows[${i}].texto=this.value" placeholder="Texto da alternativa">
+            <input type="text" value="${esc(r.texto)}" oninput="rows[${i}].texto=this.value" placeholder="Texto da alternativa ${L[i]}" aria-label="Texto da alternativa ${L[i]}" enterkeyhint="next" autocomplete="off">
           </div>
           ${rows.length > 2 ? `<button type="button" class="x" onclick="rmAlt(${i})" aria-label="Remover alternativa ${L[i]}">✕</button>` : ''}
         </div>
       `).join('');
-      $('#addAlt').style.display = rows.length >= 5 ? 'none' : '';
+      const cheio = rows.length >= MAX_ALTS;
+      $('#addAlt').style.display = cheio ? 'none' : '';
+      $('#addAlt').textContent = cheio ? '' : '+ Alternativa ' + L[rows.length];
+      $('#altLimit').hidden = !cheio;
+    }
+
+    function marcarCorreta(i) {
+      rows.forEach((x, k) => x.correta = k == i);
+      document.querySelectorAll('#alts .alt-row').forEach((el, k) => el.classList.toggle('is-correct', k == i));
     }
 
     function rmAlt(i) {
@@ -153,8 +177,11 @@
     }
 
     $('#addAlt').onclick = () => {
+      if (rows.length >= MAX_ALTS) return;
       rows.push({ texto: '', correta: false });
       drawAlts();
+      const campos = document.querySelectorAll('#alts .alt-row .field input');
+      if (campos.length) campos[campos.length - 1].focus();
     };
 
     async function carregarMaterias() {
@@ -174,7 +201,7 @@
       try {
         qs = await api('/questoes/?' + params.toString(), {});
       } catch (e) {
-        $('#list').innerHTML = `<tr><td colspan="4" class="aluno-empty">Erro ao carregar: ${esc(e.message)}</td></tr>`;
+        $('#list').innerHTML = `<tr class="vazio"><td colspan="4" class="aluno-empty">Erro ao carregar: ${esc(e.message)}</td></tr>`;
         return;
       }
 
@@ -203,7 +230,7 @@
             <button class="btn-icon-del" onclick="del(${q.id})">Excluir</button>
           </td>
         </tr>`;
-      }).join('') || '<tr><td colspan="4" class="aluno-empty">Nenhuma questão encontrada.</td></tr>';
+      }).join('') || '<tr class="vazio"><td colspan="4" class="aluno-empty">Nenhuma questão encontrada.</td></tr>';
     }
 
     function reset() {
