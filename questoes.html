@@ -56,7 +56,7 @@
 
           <div class="panel">
             <h2 id="ft">Nova questão</h2>
-            <p class="sub">Use de 2 a 5 alternativas, de A até E.</p>
+            <p class="sub">Preencha as alternativas de A até E e marque a correta.</p>
             <div class="form-grid">
               <div class="field full">
                 <label for="qm">Matéria</label>
@@ -155,7 +155,6 @@
           <div class="field">
             <input type="text" value="${esc(r.texto)}" oninput="rows[${i}].texto=this.value" placeholder="Texto da alternativa ${L[i]}" aria-label="Texto da alternativa ${L[i]}" enterkeyhint="next" autocomplete="off">
           </div>
-          ${rows.length > 2 ? `<button type="button" class="x" onclick="rmAlt(${i})" aria-label="Remover alternativa ${L[i]}">✕</button>` : ''}
         </div>
       `).join('');
       const cheio = rows.length >= MAX_ALTS;
@@ -167,13 +166,6 @@
     function marcarCorreta(i) {
       rows.forEach((x, k) => x.correta = k == i);
       document.querySelectorAll('#alts .alt-row').forEach((el, k) => el.classList.toggle('is-correct', k == i));
-    }
-
-    function rmAlt(i) {
-      const was = rows[i].correta;
-      rows.splice(i, 1);
-      if (was) rows[0].correta = true;
-      drawAlts();
     }
 
     $('#addAlt').onclick = () => {
