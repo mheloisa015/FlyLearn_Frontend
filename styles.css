@@ -899,6 +899,62 @@ footer .wrap{
   min-height:70px;
 }
 
+.password-field{
+  position:relative;
+}
+
+.password-field input{
+  padding-right:46px;
+  box-sizing:border-box;
+}
+
+.password-toggle{
+  position:absolute;
+  top:50%;
+  right:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform:translateY(-50%);
+  border:0;
+  padding:6px 8px;
+  background:transparent;
+  color:var(--ink-light);
+  cursor:pointer;
+}
+
+.password-toggle:hover{
+  color:var(--ink-blue);
+}
+
+.password-toggle:focus-visible{
+  outline:2px solid var(--ink-blue);
+  outline-offset:2px;
+  border-radius:4px;
+}
+
+.password-icon{
+  width:19px;
+  height:19px;
+  fill:none;
+  stroke:currentColor;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-width:1.8;
+}
+
+.password-icon-open{
+  display:none;
+}
+
+.password-toggle.is-visible .password-icon-closed{
+  display:none;
+}
+
+.password-toggle.is-visible .password-icon-open{
+  display:block;
+}
+
 .field select:focus,
 .field input:focus,
 .field textarea:focus{

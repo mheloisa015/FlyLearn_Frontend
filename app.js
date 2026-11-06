@@ -129,7 +129,14 @@ const API_BASE = ['localhost', '127.0.0.1'].includes(location.hostname) ? 'https
 const PROF=JSON.parse(localStorage.getItem('flylearn_user')||'null')||{id:null};
 
 async function api(path, opts) {
-  const r = await fetch(API_BASE + path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts || {}));
+  const config = Object.assign({}, opts || {});
+  const user = JSON.parse(localStorage.getItem('flylearn_user') || 'null');
+  config.headers = Object.assign(
+    { 'Content-Type': 'application/json' },
+    config.headers || {}
+  );
+  if (user && user.token) config.headers.Authorization = 'Bearer ' + user.token;
+  const r = await fetch(API_BASE + path, config);
   const dados = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(dados.erro || dados.error || ('Erro ' + r.status + ' ao falar com o servidor.'));
   return dados;
