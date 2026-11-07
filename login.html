@@ -27,7 +27,10 @@
                     </div>
                     <div class="field">
                         <label for="password">Senha</label>
-                        <input type="password" id="password" name="password" placeholder="Digite sua senha" autocomplete="new-password" required>
+                        <div class="pw-wrap">
+                            <input type="password" id="password" name="password" placeholder="Digite sua senha" autocomplete="new-password" required>
+                            <button type="button" class="pw-toggle" data-alvo="password" aria-label="Mostrar senha" aria-pressed="false"></button>
+                        </div>
                     </div>
                     <div style="text-align: right; margin-top: 6px;">
                         <a href="recup_senha.html" style="font-size: 12px;">Esqueci minha senha</a>
@@ -73,6 +76,25 @@
                 bnt.disabled = false;
                 bnt.textContent = 'Entrar';
             }
+        });
+    </script>
+    <script>
+        function atualizarIconeSenha(button, mostrar) {
+            button.innerHTML = mostrar
+                ? '<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>'
+                : '<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13c2.5-2.5 5.5-3.5 9-3.5s6.5 1 9 3.5"></path></svg>';
+        }
+
+        document.querySelectorAll('.pw-toggle').forEach(function (button) {
+            atualizarIconeSenha(button, false);
+            button.addEventListener('click', function () {
+                const input = document.getElementById(button.dataset.alvo);
+                const mostrar = input.type === 'password';
+                input.type = mostrar ? 'text' : 'password';
+                button.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+                button.setAttribute('aria-pressed', String(mostrar));
+                atualizarIconeSenha(button, mostrar);
+            });
         });
     </script>
 </body>

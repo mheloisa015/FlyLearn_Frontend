@@ -93,6 +93,44 @@ button{
   font-family:inherit;
 }
 
+.pw-wrap{
+  position:relative;
+}
+
+.pw-wrap input{
+  width:100%;
+  padding-right:46px;
+  box-sizing:border-box;
+}
+
+.pw-toggle{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  border:0;
+  background:none;
+  cursor:pointer;
+  font-size:1rem;
+  padding:6px 8px;
+  color:var(--ink-light);
+}
+
+.pw-toggle .eye-icon{
+  display:block;
+  width:20px;
+  height:20px;
+  fill:none;
+  stroke:currentColor;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-width:1.8;
+}
+
+.pw-toggle:hover{
+  color:var(--ink-blue);
+}
+
 img{
   max-width:100%;
 }

@@ -117,7 +117,7 @@
                   <label for="p-senha-confirma">Senha atual</label>
                   <div class="pw-wrap">
                     <input type="password" id="p-senha-confirma" name="senha_atual" autocomplete="current-password" placeholder="Necessária para trocar o e-mail">
-                    <button type="button" class="pw-toggle" data-alvo="p-senha-confirma" aria-label="Mostrar senha">👁</button>
+                    <button type="button" class="pw-toggle" data-alvo="p-senha-confirma" aria-label="Mostrar senha" aria-pressed="false"></button>
                   </div>
                   <span class="hint">Por segurança, confirme sua senha para alterar o e-mail.</span>
                   <span class="field-error" data-erro="senha_atual"></span>
@@ -140,7 +140,7 @@
                   <label for="s-atual">Senha atual</label>
                   <div class="pw-wrap">
                     <input type="password" id="s-atual" autocomplete="current-password" required>
-                    <button type="button" class="pw-toggle" data-alvo="s-atual" aria-label="Mostrar senha">👁</button>
+                    <button type="button" class="pw-toggle" data-alvo="s-atual" aria-label="Mostrar senha" aria-pressed="false"></button>
                   </div>
                   <span class="field-error" data-erro="senha_atual"></span>
                 </div>
@@ -148,7 +148,7 @@
                   <label for="s-nova">Nova senha</label>
                   <div class="pw-wrap">
                     <input type="password" id="s-nova" autocomplete="new-password" minlength="6" required>
-                    <button type="button" class="pw-toggle" data-alvo="s-nova" aria-label="Mostrar senha">👁</button>
+                    <button type="button" class="pw-toggle" data-alvo="s-nova" aria-label="Mostrar senha" aria-pressed="false"></button>
                   </div>
                   <span class="field-error" data-erro="nova_senha"></span>
                 </div>
@@ -156,7 +156,7 @@
                   <label for="s-confirma">Confirmar nova senha</label>
                   <div class="pw-wrap">
                     <input type="password" id="s-confirma" autocomplete="new-password" required>
-                    <button type="button" class="pw-toggle" data-alvo="s-confirma" aria-label="Mostrar senha">👁</button>
+                    <button type="button" class="pw-toggle" data-alvo="s-confirma" aria-label="Mostrar senha" aria-pressed="false"></button>
                   </div>
                   <span class="field-error" data-erro="confirma"></span>
                 </div>
@@ -257,13 +257,21 @@
   }
 
   // ---- Mostrar/ocultar senha
+  function atualizarIconeSenha(button, mostrar) {
+    button.innerHTML = mostrar
+      ? '<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>'
+      : '<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13c2.5-2.5 5.5-3.5 9-3.5s6.5 1 9 3.5"></path></svg>';
+  }
+
   document.querySelectorAll('.pw-toggle').forEach(b => {
+    atualizarIconeSenha(b, false);
     b.addEventListener('click', () => {
       const i = $id(b.dataset.alvo);
       const mostrar = i.type === 'password';
       i.type = mostrar ? 'text' : 'password';
       b.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
-      b.textContent = mostrar ? '🙈' : '👁';
+      b.setAttribute('aria-pressed', String(mostrar));
+      atualizarIconeSenha(b, mostrar);
     });
   });
 

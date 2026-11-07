@@ -24,7 +24,13 @@
         <div class="auth-fields">
           <div class="field"><label for="nome">Nome completo</label><input type="text" id="nome" required placeholder="Seu nome"></div>
           <div class="field"><label for="email2">E-mail</label><input type="email" id="email2" required placeholder="voce@escola.com.br"></div>
-          <div class="field"><label for="senha2">Senha</label><input type="password" id="senha2" required placeholder="Crie uma senha"></div>
+          <div class="field">
+            <label for="senha2">Senha</label>
+            <div class="pw-wrap">
+              <input type="password" id="senha2" required placeholder="Crie uma senha">
+              <button type="button" class="pw-toggle" data-alvo="senha2" aria-label="Mostrar senha" aria-pressed="false"></button>
+            </div>
+          </div>
         </div>
         <div class="form-actions" style="margin-top:24px;">
           <button type="submit" class="btn-generate" style="width:100%;justify-content:center;">Criar conta</button>
@@ -64,6 +70,25 @@
       } finally {
         btn.disabled = false; btn.textContent = 'Criar conta';
       }
+    });
+  </script>
+  <script>
+    function atualizarIconeSenha(button, mostrar) {
+      button.innerHTML = mostrar
+        ? '<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>'
+        : '<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13c2.5-2.5 5.5-3.5 9-3.5s6.5 1 9 3.5"></path></svg>';
+    }
+
+    document.querySelectorAll('.pw-toggle').forEach(function (button) {
+      atualizarIconeSenha(button, false);
+      button.addEventListener('click', function () {
+        const input = document.getElementById(button.dataset.alvo);
+        const mostrar = input.type === 'password';
+        input.type = mostrar ? 'text' : 'password';
+        button.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+        button.setAttribute('aria-pressed', String(mostrar));
+        atualizarIconeSenha(button, mostrar);
+      });
     });
   </script>
 
