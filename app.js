@@ -348,3 +348,98 @@ function modal(html) {
   document.body.appendChild(m);
   return m;
 }
+
+/* ---------- MOBILE ----------
+   Menu em gaveta (botão ☰ na barra de topo) e rótulos nas células das tabelas,
+   que no celular viram cartões (ver "MOBILE" no styles.css). Roda sozinho em
+   toda tela que tenha .sidebar / .topbar / table.aluno-table, inclusive
+   quando a tela é montada depois pelo layout(). */
+function alternarMenu(abrir) {
+  const aberto = typeof abrir === 'boolean' ? abrir : !document.body.classList.contains('nav-open');
+  document.body.classList.toggle('nav-open', aberto);
+  const b = $('.menu-btn');
+  if (b) {
+    b.setAttribute('aria-expanded', aberto);
+    b.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu');
+  }
+  if (aberto) {
+    const ativo = $('.sidebar nav a.active') || $('.sidebar nav a');
+    if (ativo) setTimeout(() => ativo.focus({ preventScroll: true }), 60);
+  } else if (b && document.activeElement && document.activeElement.closest('.sidebar')) {
+    b.focus();
+  }
+}
+
+function montarMenuMobile() {
+  const sb = $('.sidebar'), tb = $('.topbar');
+  if (!sb || !tb) return;
+  if (!sb.id) sb.id = 'sidebar';
+
+  if (!tb.querySelector('.menu-btn')) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'menu-btn';
+    b.setAttribute('aria-label', 'Abrir menu');
+    b.setAttribute('aria-controls', sb.id);
+    b.setAttribute('aria-expanded', 'false');
+    b.innerHTML = '<span></span><span></span><span></span>';
+    b.onclick = () => alternarMenu();
+    tb.prepend(b);
+  }
+  if (!sb.querySelector('.nav-close')) {
+    const c = document.createElement('button');
+    c.type = 'button';
+    c.className = 'nav-close';
+    c.setAttribute('aria-label', 'Fechar menu');
+    c.textContent = '✕';
+    c.onclick = () => alternarMenu(false);
+    sb.prepend(c);
+  }
+  if (!$('.nav-overlay')) {
+    const o = document.createElement('div');
+    o.className = 'nav-overlay';
+    o.onclick = () => alternarMenu(false);
+    document.body.appendChild(o);
+  }
+}
+
+function rotularTabelas() {
+  document.querySelectorAll('table.aluno-table:not([data-nostack])').forEach(t => {
+    const cab = [...t.querySelectorAll('thead th')].map(th => th.hasAttribute('data-nolabel') ? '' : th.textContent.trim());
+    t.querySelectorAll('tbody tr').forEach(tr => {
+      [...tr.children].forEach((td, i) => {
+        if (td.tagName === 'TD' && !td.hasAttribute('colspan') && cab[i]) td.setAttribute('data-label', cab[i]);
+      });
+    });
+  });
+}
+
+(function iniciarMobile() {
+  let agendado = false;
+  const atualizar = () => {
+    agendado = false;
+    montarMenuMobile();
+    rotularTabelas();
+  };
+  const agendar = () => {
+    if (agendado) return;
+    agendado = true;
+    requestAnimationFrame(atualizar);
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    atualizar();
+    // tabelas são preenchidas depois do fetch; a tela também pode ser remontada por layout()
+    new MutationObserver(agendar).observe(document.body, { childList: true, subtree: true });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.body.classList.contains('nav-open')) alternarMenu(false);
+  });
+  document.addEventListener('click', e => {
+    if (e.target.closest('.sidebar nav a, .sidebar .sidebar-foot a')) document.body.classList.remove('nav-open');
+  });
+  window.matchMedia('(min-width:901px)').addEventListener('change', e => {
+    if (e.matches) alternarMenu(false);
+  });
+})();
