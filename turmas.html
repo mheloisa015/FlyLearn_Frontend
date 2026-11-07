@@ -154,7 +154,7 @@
 
     async function load() {
       try {
-        const d = await api('/turmas/?professor_id=' + PROF.id);
+        const d = await api('/turmas/');
         turmas = d.turmas;
         alunos = d.alunos;
       } catch (e) {
@@ -249,7 +249,7 @@
       const body = JSON.stringify({
         ano: $('#turma-ano').value,
         disciplina: $('#turma-disciplina').value,
-        professor_id: PROF.id
+        
       });
       try {
         if (editTurma) {

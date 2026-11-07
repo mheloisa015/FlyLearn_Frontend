@@ -101,9 +101,9 @@
 
     async function load() {
       try {
-        materias = await api('/materias/?professor_id=' + PROF.id);
+        materias = await api('/materias/');
         questoes = await api('/questoes/');
-        provas = await api('/provas/?professor_id=' + PROF.id);
+        provas = await api('/provas/');
       } catch (e) {
         toast(e.message);
       }
@@ -194,7 +194,7 @@
       const body = JSON.stringify({
         nome,
         descricao: $('#md').value.trim(),
-        professor_id: PROF.id
+        
       });
 
       try {

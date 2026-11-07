@@ -21,9 +21,9 @@
   async function carregar() {
     try {
       const [ps, ts, av] = await Promise.all([
-        api('/provas/?professor_id=' + PROF.id),
-        api('/turmas/?professor_id=' + PROF.id),
-        api('/avaliacoes/?professor_id=' + PROF.id)
+        api('/provas/'),
+        api('/turmas/'),
+        api('/avaliacoes/')
       ]);
       provas = ps; turmas = ts.turmas || []; alunos = ts.alunos || []; avs = av;
     } catch (e) {
@@ -35,7 +35,7 @@
   }
 
   async function recarregarAvaliacoes() {
-    avs = await api('/avaliacoes/?professor_id=' + PROF.id);
+    avs = await api('/avaliacoes/');
     desenharTabela();
   }
 

@@ -355,12 +355,11 @@
   const plural = (n, s, p) => n + ' ' + (n === 1 ? s : p);
 
   async function carregarResumo() {
-    const q = '?professor_id=' + encodeURIComponent(PID);
     const [rt, rm, rp, ra] = await Promise.allSettled([
-      api('/turmas/' + q),
-      api('/materias/' + q),
-      api('/provas/' + q),
-      api('/avaliacoes/' + q + '&status=aplicada')
+      api('/turmas/'),
+      api('/materias/'),
+      api('/provas/'),
+      api('/avaliacoes/?status=aplicada')
     ]);
 
     if (rt.status === 'fulfilled') {

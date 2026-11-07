@@ -125,11 +125,18 @@ const NAV = [
    Telas que já foram ligadas no banco de verdade (questoes.html, gerador.html,
    biblioteca.html) usam isto em vez do DB/localStorage. API_BASE: no Netlify,
    /api/* é redirecionado pro Render (netlify.toml); local, chama o Render direto. */
-const API_BASE = ['localhost', '127.0.0.1'].includes(location.hostname) ? 'https://flylearn.onrender.com' : '/api';
+const API_BASE = window.FLYLEARN_API || (
+  ['localhost', '127.0.0.1'].includes(location.hostname)
+    ? 'http://127.0.0.1:8000'
+    : '/api'
+);
 const PROF=JSON.parse(localStorage.getItem('flylearn_user')||'null')||{id:null};
 
 async function api(path, opts) {
-  const r = await fetch(API_BASE + path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts || {}));
+  const r = await fetch(API_BASE + path, Object.assign({
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' }
+  }, opts || {}));
   const dados = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(dados.erro || dados.error || ('Erro ' + r.status + ' ao falar com o servidor.'));
   return dados;

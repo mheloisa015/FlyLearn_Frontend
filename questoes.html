@@ -177,7 +177,7 @@
     };
 
     async function carregarMaterias() {
-      materias = await api('/materias/?professor_id=' + PROF.id, {});
+      materias = await api('/materias/', {});
       const o = materias.map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join('');
       $('#qm').innerHTML = o || '<option value="">Cadastre uma matéria primeiro</option>';
       $('#fm').innerHTML = '<option value="">Todas as matérias</option>' + o;

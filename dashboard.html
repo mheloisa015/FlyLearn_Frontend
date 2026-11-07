@@ -190,14 +190,12 @@
   }
   if (!PID) return;
 
-  const q = '?professor_id=' + encodeURIComponent(PID);
-
   Promise.allSettled([
-    api('/provas/' + q),
-    api('/turmas/' + q),
-    api('/materias/' + q),
+    api('/provas/'),
+    api('/turmas/'),
+    api('/materias/'),
     api('/questoes/?ativo=1'),
-    api('/avaliacoes/' + q)
+    api('/avaliacoes/')
   ]).then(([rp, rt, rm, rq, ra]) => {
     const ok = r => r.status === 'fulfilled';
     const provas = ok(rp) ? rp.value : null;

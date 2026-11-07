@@ -53,8 +53,8 @@
       const c = $('#c');
       try {
         [provasCache, materiasCache] = await Promise.all([
-          api('/provas/?professor_id=' + PROF.id, {}),
-          api('/materias/?professor_id=' + PROF.id, {}),
+          api('/provas/', {}),
+          api('/materias/', {}),
         ]);
       } catch (e) {
         c.innerHTML = `<div class="panel"><p class="sub">Erro ao carregar: ${esc(e.message)}</p></div>`;
@@ -173,7 +173,7 @@
     async function aplicar(pid) {
       let turmas;
       try {
-        turmas = (await api('/turmas/?professor_id=' + PROF.id, {})).turmas || [];
+        turmas = (await api('/turmas/', {})).turmas || [];
       } catch (e) {
         return toast(e.message);
       }

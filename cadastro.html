@@ -43,9 +43,11 @@
 
   <script src="app.js"></script>
   <script>
-    const API = ['localhost', '127.0.0.1'].includes(location.hostname)
-      ? 'https://flylearn.onrender.com'
-      : '/api';
+    const API = window.FLYLEARN_API || (
+      ['localhost', '127.0.0.1'].includes(location.hostname)
+        ? 'http://127.0.0.1:8000'
+        : '/api'
+    );
 
     document.getElementById('cadastro-form').addEventListener('submit', async function (e) {
       e.preventDefault();

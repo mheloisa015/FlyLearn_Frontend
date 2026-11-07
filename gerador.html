@@ -133,7 +133,7 @@
     }
 
     async function init() {
-      materias = await api('/materias/?professor_id=' + PROF.id, {});
+      materias = await api('/materias/', {});
       $('#pm').innerHTML = materias.map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join('') || '<option value="">Cadastre uma matéria primeiro</option>';
 
       if (pid) {
@@ -237,7 +237,6 @@
           const resp = await api('/provas/', {
             method: 'POST',
             body: JSON.stringify({
-              professor_id: PROF.id,
               materia_id: mat,
               nome: $('#pn').value.trim(),
               descricao: $('#pd').value.trim(),

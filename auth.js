@@ -5,6 +5,17 @@
 
   document.addEventListener('click', function (e) {
     const a = e.target.closest('.sidebar-foot a');
-    if (a) localStorage.removeItem('flylearn_user');
+    if (a) {
+      const apiBase = ['localhost', '127.0.0.1'].includes(location.hostname)
+        ? 'https://flylearn.onrender.com'
+        : '/api';
+      fetch(apiBase + '/logout/', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true
+      }).catch(() => {});
+      localStorage.removeItem('flylearn_user');
+    }
   });
 })();
