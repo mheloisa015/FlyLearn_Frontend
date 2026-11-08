@@ -22,6 +22,12 @@
       #list td[colspan] { grid-column: 1 / -1; }
     }
   </style>
+  <style>
+    .alt-move{display:flex;flex-direction:column;gap:2px;flex:none}
+    .alt-move .mv{width:32px;height:21px;padding:0;border:1px solid #C9DCEF;background:#fff;color:var(--ink-blue);border-radius:6px;font-size:.62rem;line-height:1;cursor:pointer}
+    .alt-move .mv:hover:not(:disabled){background:#EAF2FB}
+    .alt-move .mv:disabled{opacity:.35;cursor:not-allowed}
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -155,12 +161,23 @@
           <div class="field">
             <input type="text" value="${esc(r.texto)}" oninput="rows[${i}].texto=this.value" placeholder="Texto da alternativa ${L[i]}" aria-label="Texto da alternativa ${L[i]}" enterkeyhint="next" autocomplete="off">
           </div>
+          <div class="alt-move">
+            <button type="button" class="mv" onclick="moverAlt(${i}, -1)" ${i === 0 ? 'disabled' : ''} title="Subir alternativa" aria-label="Subir alternativa ${L[i]}">▲</button>
+            <button type="button" class="mv" onclick="moverAlt(${i}, 1)" ${i === rows.length - 1 ? 'disabled' : ''} title="Descer alternativa" aria-label="Descer alternativa ${L[i]}">▼</button>
+          </div>
         </div>
       `).join('');
       const cheio = rows.length >= MAX_ALTS;
       $('#addAlt').style.display = cheio ? 'none' : '';
       $('#addAlt').textContent = cheio ? '' : '+ Alternativa ' + L[rows.length];
       $('#altLimit').hidden = !cheio;
+    }
+
+    function moverAlt(i, dir) {
+      const j = i + dir;
+      if (j < 0 || j >= rows.length) return;
+      [rows[i], rows[j]] = [rows[j], rows[i]];   // troca de lugar (texto, correta e id vão juntos)
+      drawAlts();
     }
 
     function marcarCorreta(i) {
@@ -294,7 +311,7 @@
         materia_id: m,
         enunciado: e,
         ativo: $('#qa').checked,
-        alts: rows.map(r => ({ texto: r.texto.trim(), correta: r.correta }))
+        alts: rows.map(r => ({ id: r.id, texto: r.texto.trim(), correta: r.correta }))
       };
 
       const btn = $('#save');
