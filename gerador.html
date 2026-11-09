@@ -105,9 +105,12 @@
               <label class="chk">
                 <input type="checkbox" id="eq" checked> Ordem das questões
               </label>
+              <label class="chk">
+                <input type="checkbox" id="ea"> 🎲 Ordem das alternativas
+              </label>
             </div>
           </div>
-          <p class="hint">A ordem das alternativas (A, B, C…) é sempre a mesma cadastrada na questão — esse banco não embaralha alternativa por versão.</p>
+          <p class="hint">Com "Ordem das alternativas" marcada, cada versão sorteia uma ordem diferente (A, B, C…) e o gabarito de cada versão é ajustado automaticamente.</p>
           <div class="error-box" id="err"></div>
           <div class="form-actions">
             <button type="button" class="btn-generate" id="go">✏️ Gerar prova</button>
@@ -242,7 +245,8 @@
               descricao: $('#pd').value.trim(),
               qids: [...sel],
               n_versoes: n,
-              embaralhar_questoes: $('#eq').checked
+              embaralhar_questoes: $('#eq').checked,
+              embaralhar_alternativas: $('#ea').checked
             })
           });
           nome = resp.nome;
@@ -252,7 +256,8 @@
             method: 'POST',
             body: JSON.stringify({
               n_versoes: n,
-              embaralhar_questoes: $('#eq').checked
+              embaralhar_questoes: $('#eq').checked,
+              embaralhar_alternativas: $('#ea').checked
             })
           });
           nome = P.nome;
