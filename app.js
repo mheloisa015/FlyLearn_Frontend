@@ -164,7 +164,14 @@ function printDoc(title, html, extraCss) {
     .g{border:1px solid #ccc;border-radius:6px;padding:8px;text-align:center;font-size:.88rem}
     .g b{display:block;font-size:.76rem;color:#555;margin-bottom:4px}
     .ft{margin-top:18px;font-size:.76rem;color:#888}
-    @media print{ @page{ margin:14mm } }
+    @page{size:A4;margin:14mm}
+    @media print{ @page{size:A4;margin:14mm} }
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .q,.g{break-inside:avoid;page-break-inside:avoid}
+    .dica{font:14px/1.5 Arial,Helvetica,sans-serif;background:#FFF8E1;border:1px solid #F2C94C;color:#5c4400;padding:12px 16px;margin:0 0 12px;max-width:210mm;box-sizing:border-box}
+    .dica b{color:#3d2e00}
+    .dica button{margin-top:8px;padding:8px 14px;border:0;border-radius:6px;background:#1D5FA8;color:#fff;font-size:14px;cursor:pointer}
+    @media print{ .no-print{display:none!important} }
     ${extraCss || ''}
   </style></head><body>${html}</body></html>`);
   w.document.close();
