@@ -59,6 +59,20 @@
       </div>
 
       <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Aproveitamento por matéria</h2>
+            <p class="sub">Percentual de acertos nas avaliações já corrigidas. Mostra o que precisa ser retomado em sala.</p>
+          </div>
+          <div class="field" style="min-width:200px">
+            <label for="filtro-turma" class="hint">Turma</label>
+            <select id="filtro-turma"><option value="">Todas as turmas</option></select>
+          </div>
+        </div>
+        <div id="lista-desempenho"><div class="muted">Carregando…</div></div>
+      </div>
+
+      <div class="panel">
         <h2>Ações rápidas</h2>
         <p class="sub">Siga o fluxo: matéria, questões, prova, aplicação e correção.</p>
         <div class="quick-actions">
@@ -276,6 +290,35 @@
       alunos.forEach(a => cont[a.turma_id] = (cont[a.turma_id] || 0) + 1);
       lt.innerHTML = turmas.map(t => `<div class="mini-item"><div><h4>${esc(t.ano)}º ano</h4><div class="meta">${esc(t.disciplina)}</div></div><span class="count">${plural(cont[t.id] || 0, 'aluno', 'alunos')}</span></div>`).join('');
     }
+
+    // ----- aproveitamento por matéria (filtrável por turma)
+    const ld = $id('lista-desempenho');
+    const sel = $id('filtro-turma');
+    if (turmas) {
+      turmas.forEach(t => sel.insertAdjacentHTML('beforeend', `<option value="${esc(t.id)}">${esc(t.ano)}º ano — ${esc(t.disciplina)}</option>`));
+    }
+    let reqDesempenho = 0;
+    function carregarDesempenho() {
+      const n = ++reqDesempenho;
+      ld.innerHTML = '<div class="muted">Carregando…</div>';
+      api('/desempenho/' + (sel.value ? '?turma_id=' + encodeURIComponent(sel.value) : '')).then(r => {
+        if (n !== reqDesempenho) return; // chegou uma resposta mais nova
+        const ms = r.materias || [];
+        if (!ms.length) {
+          ld.innerHTML = vazio(sel.value ? 'Ainda não há avaliações corrigidas para esta turma.' : 'Ainda não há avaliações corrigidas.', 'correcao.html', 'Corrigir avaliações');
+          return;
+        }
+        ld.innerHTML = ms.map((m, i) => {
+          const cls = m.percentual >= 70 ? '' : m.percentual >= 50 ? ' mid' : ' low';
+          const det = `${plural(m.acertos, 'acerto', 'acertos')} em ${plural(m.total, 'resposta', 'respostas')} · ${plural(m.avaliacoes, 'avaliação', 'avaliações')}`;
+          return `<div class="bar-row"${i === ms.length - 1 ? ' style="margin-bottom:0"' : ''} title="${esc(det)}"><div class="bl"><span>${esc(m.nome)}</span><span class="mono">${m.percentual}%</span></div><div class="bar-track"><div class="bar-fill${cls}" style="width:${Math.max(m.percentual, 2)}%"></div></div></div>`;
+        }).join('');
+      }).catch(() => {
+        if (n === reqDesempenho) ld.innerHTML = vazio('Não foi possível carregar o aproveitamento.');
+      });
+    }
+    sel.addEventListener('change', carregarDesempenho);
+    carregarDesempenho();
 
     // ----- banco de questões por matéria
     const lb = $id('lista-barras');
