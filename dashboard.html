@@ -144,32 +144,17 @@
             <a class="panel-link" href="biblioteca.html">Ver todas</a>
           </div>
           <div class="recent-list" id="lista-provas"><div class="muted">Carregando…</div></div>
-          </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:24px">
-          <div class="panel" style="margin-bottom:0">
-            <div class="panel-head">
-              <div>
-                <h2>Turmas</h2>
-                <p class="sub">Ano, disciplina e alunos.</p>
-              </div>
-              <a class="panel-link" href="turmas.html">Gerenciar</a>
+        <div class="panel" style="margin-bottom:0">
+          <div class="panel-head">
+            <div>
+              <h2>Turmas</h2>
+              <p class="sub">Ano, disciplina e alunos.</p>
             </div>
-            <div class="mini-list" id="lista-turmas"><div class="muted">Carregando…</div></div>
+            <a class="panel-link" href="turmas.html">Gerenciar</a>
           </div>
-          </div>
-
-          <div class="panel" style="margin-bottom:0">
-            <div class="panel-head">
-              <div>
-                <h2>Banco de questões</h2>
-                <p class="sub">Questões ativas por matéria.</p>
-              </div>
-              <a class="panel-link" href="questoes.html">Abrir</a>
-            </div>
-            <div id="lista-barras"><div class="muted">Carregando…</div></div>
-          </div>
+          <div class="mini-list" id="lista-turmas"><div class="muted">Carregando…</div></div>
         </div>
       </div>
 
@@ -320,20 +305,6 @@
     sel.addEventListener('change', carregarDesempenho);
     carregarDesempenho();
 
-    // ----- banco de questões por matéria
-    const lb = $id('lista-barras');
-    if (!questoes) lb.innerHTML = vazio('Não foi possível carregar as questões.');
-    else if (!questoes.length) lb.innerHTML = vazio('Nenhuma questão ativa.', 'questoes.html', 'Criar questão');
-    else {
-      const por = {};
-      questoes.forEach(x => por[x.materia_id] = (por[x.materia_id] || 0) + 1);
-      const linhas = Object.entries(por).sort((a, b) => b[1] - a[1]);
-      const max = linhas[0][1];
-      lb.innerHTML = linhas.map(([mid, n]) => {
-        const r = n / max;
-        return `<div class="bar-row"><div class="bl"><span>${esc(mats[mid].nome)}</span><span>${n}</span></div><div class="bar-track"><div class="bar-fill${r < .4 ? ' low' : r < .7 ? ' mid' : ''}" style="width:${Math.max(r * 100, 4)}%"></div></div></div>`;
-      }).join('');
-    }
   });
 })();
 </script>
