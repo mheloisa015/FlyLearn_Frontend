@@ -220,7 +220,7 @@
       $('#list').innerHTML = qs.map(q => {
         const al = [...q.alts].sort((a, b) => (a.ordem_original || 0) - (b.ordem_original || 0));
         return `<tr>
-          <td><b>#${q.id}</b></td>
+          
           <td>
             <b>${esc(q.enunciado)}</b><br>
             <span class="code">${esc(materiaNome(q.materia_id))} · atualizada em ${fmt(q.updated_at || q.created_at)}</span>
