@@ -94,23 +94,44 @@
 
         <div class="panel">
           <h2 id="t3">3. Versões</h2>
-          <p class="sub">Cada versão (tabela <b>versao_prova</b>) recebe um código e um gabarito próprio.</p>
+          <p class="sub">
+            Uma <b>versão</b> é uma cópia da mesma prova com a ordem alterada. Alunos sentados lado a lado
+            recebem versões diferentes, o que dificulta a cola. Cada versão tem seu próprio
+            <b>código</b> e seu próprio <b>gabarito</b>.
+          </p>
+
           <div class="form-grid">
             <div class="field">
               <label for="nv">Quantas versões gerar?</label>
               <input type="number" id="nv" value="2" min="1" max="4">
+              <span class="hint">
+                De 1 a 4. Exemplo: numa turma de 30 alunos, gere 3 versões.
+                Cada versão fica com 10 alunos.
+              </span>
             </div>
+
             <div class="field">
-              <label>Embaralhar</label>
+              <label>O que deve mudar de uma versão para outra?</label>
+
               <label class="chk">
                 <input type="checkbox" id="eq" checked> Ordem das questões
               </label>
+              <span class="hint">Exemplo: a questão 1 da versão A pode ser a questão 5 da versão B.</span>
+
               <label class="chk">
                 <input type="checkbox" id="ea"> 🎲 Ordem das alternativas
               </label>
+              <span class="hint">As opções A, B, C… são sorteadas em cada versão. O gabarito de cada versão é ajustado automaticamente.</span>
             </div>
           </div>
-          <p class="hint">Com "Ordem das alternativas" marcada, cada versão sorteia uma ordem diferente (A, B, C…) e o gabarito de cada versão é ajustado automaticamente.</p>
+
+          <p class="sub">
+            <b>Como funciona:</b> ao clicar em "Gerar prova", criamos as versões A, B, C… com o código e o
+            gabarito de cada uma. Depois você imprime as provas, os gabaritos e as folhas de resposta.
+            Se marcar as duas opções, cada versão muda a ordem das questões e das alternativas.
+            Se não marcar nenhuma, as versões ficam idênticas e só o código muda.
+          </p>
+
           <div class="error-box" id="err"></div>
           <div class="form-actions">
             <button type="button" class="btn-generate" id="go">✏️ Gerar prova</button>
