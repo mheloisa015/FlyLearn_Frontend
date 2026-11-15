@@ -129,6 +129,9 @@
   // celular/tablet (tela de toque) x computador
   const ehCelular = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+  // computador: a câmera (webcam) fica bloqueada; só o envio de imagem é permitido
+  if (!ehCelular) panel.querySelector('.scan-tabs').style.display = 'none';
+
   const showErr = m => { err.textContent = m || ''; err.style.display = m ? 'block' : 'none'; };
   const stopCam = () => { stream && stream.getTracks().forEach(t => t.stop()); stream = null; };
   const btn = (txt, cls, fn) => {
@@ -145,6 +148,7 @@
   }
 
   function setMode(m) {
+    if (m === 'cam' && !ehCelular) m = 'up';   // bloqueio da webcam no computador
     mode = m; blob = null; showErr('');
     $q('#t-cam').setAttribute('aria-selected', m === 'cam');
     $q('#t-up').setAttribute('aria-selected', m === 'up');
@@ -155,6 +159,7 @@
   }
 
   async function startCam() {
+    if (!ehCelular) { setMode('up'); return; }   // nunca chama getUserMedia no computador
     tip.textContent = 'Segure o celular na vertical e encaixe a folha inteira na moldura, com boa luz e sem sombra.';
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       showErr('Este navegador não permite acessar a câmera (use HTTPS ou localhost). Envie uma imagem.');
@@ -201,7 +206,7 @@
     drop.innerHTML = 'Arraste a imagem aqui ou clique para escolher<small>Foto ou digitalização da folha de respostas</small>';
     const inp = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*', hidden: true });
     drop.appendChild(inp); stage.appendChild(drop);
-    btn('Tirar foto com o celular', '', cameraNativa);
+    if (ehCelular) btn('Tirar foto com o celular', '', cameraNativa);
     const pick = f => {
       if (!f || !f.type.startsWith('image/')) return showErr('Escolha um arquivo de imagem.');
       showErr(''); blob = f;
