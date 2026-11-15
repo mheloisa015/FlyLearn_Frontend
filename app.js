@@ -1,71 +1,10 @@
 const K = 'flylearn_db';
 
-const seed = () => ({
-  seq: 100,
-  materias: [
-    { id: 1, professor_id: 1, nome: 'Matemática', descricao: 'Aritmética e frações', created_at: '2026-09-01T10:00:00Z', updated_at: '2026-09-01T10:00:00Z' },
-    { id: 2, professor_id: 1, nome: 'Geografia', descricao: 'Brasil e mundo', created_at: '2026-09-01T10:00:00Z', updated_at: '2026-09-01T10:00:00Z' }
-  ],
-  turmas: [
-    { id: 1, ano: 3, disciplina: 'Matemática' },
-    { id: 2, ano: 5, disciplina: 'Geografia' }
-  ],
-  alunos: [
-    { id: 1, turma_id: 1, nome: 'Ana Beatriz Souza', ra: 20240117, email: 'ana@escola.com' },
-    { id: 2, turma_id: 1, nome: 'Lucas Henrique Prado', ra: 20240122, email: 'lucas@escola.com' }
-  ],
-  questoes: [
-    {
-      id: 1,
-      materia_id: 1,
-      enunciado: 'Quanto é 1/2 + 1/4?',
-      ativo: true,
-      created_at: '2026-09-01T10:00:00Z',
-      updated_at: '2026-09-01T10:00:00Z',
-      alts: [
-        { id: 1, texto: '3/4', correta: true },
-        { id: 2, texto: '2/6', correta: false },
-        { id: 3, texto: '1/6', correta: false },
-        { id: 4, texto: '2/4', correta: false }
-      ]
-    },
-    {
-      id: 5,
-      materia_id: 1,
-      enunciado: 'Quanto é 3/5 − 1/5?',
-      ativo: true,
-      created_at: '2026-09-01T10:00:00Z',
-      updated_at: '2026-09-01T10:00:00Z',
-      alts: [
-        { id: 6, texto: '2/5', correta: true },
-        { id: 7, texto: '4/5', correta: false },
-        { id: 8, texto: '2/10', correta: false },
-        { id: 9, texto: '3/10', correta: false }
-      ]
-    }
-  ],
-  provas: [],
-  versoes: [],
-  avaliacoes: []
-});
-
-let DB;
-try {
-  DB = JSON.parse(localStorage.getItem(K)) || seed();
-} catch (e) {
-  DB = seed();
-}
-
-const save = () => {
-  try {
-    localStorage.setItem(K, JSON.stringify(DB));
-  } catch (e) {}
-};
-
-const id = () => ++DB.seq;
+//Localiza um elemento html pela classe, ID ou seletor CSS.
 const $ = (s, r = document) => r.querySelector(s);
 const L = 'ABCDE';
 
+//Protege os textos antes de inseri-los no HTML, evitando que caracteres sejam  interpretados como código.
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({
   '&': '&amp;',
   '<': '&lt;',
@@ -73,9 +12,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({
   '"': '&quot;'
 }[c]));
 
-/* Popup de erro/sucesso/aviso no canto da tela, no lugar do alert() nativo do
-   navegador. Some sozinho depois de alguns segundos ou ao clicar no ✕.
-   Uso: toast('Mensagem de erro')  |  toast('Salvo!', 'sucesso')  |  toast('Atenção...', 'aviso') */
+//Exibe pequenas notificações na tela
 function toast(msg, tipo = 'erro') {
   let wrap = $('.toast-wrap');
   if (!wrap) {
@@ -96,9 +33,9 @@ function toast(msg, tipo = 'erro') {
   setTimeout(fechar, 6000);
 }
 
-const by = (t, i) => DB[t].find(x => x.id == i);
-
+//Embaralha elementos de uma lista
 const shuffle = a => {
+  //array
   a = [...a];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.random() * (i + 1) | 0;
@@ -107,9 +44,9 @@ const shuffle = a => {
   return a;
 };
 
+//Formatar datas no padrão brasil
 const fmt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
 
-const opts = (t, f, sel) => DB[t].map(x => `<option value="${x.id}"${x.id == sel ? ' selected' : ''}>${esc(f(x))}</option>`).join('');
 
 const NAV = [
   ['dashboard', '🏠', 'Painel'],
@@ -121,17 +58,17 @@ const NAV = [
   ['correcao', '🧾', 'Aplicações e correção']
 ];
 
-/* ---------- BACKEND (Django) ----------
-   Telas que já foram ligadas no banco de verdade (questoes.html, gerador.html,
-   biblioteca.html) usam isto em vez do DB/localStorage. API_BASE: no Netlify,
-   /api/* é redirecionado pro Render (netlify.toml); local, chama o Render direto. */
+//Endereço de conexão BACKEND COM FRONTEND
 const API_BASE = window.FLYLEARN_API || (
   ['localhost', '127.0.0.1'].includes(location.hostname)
     ? 'http://127.0.0.1:8000'
     : '/api'
 );
+
+//Armazena e recupera as informações do professor
 const PROF=JSON.parse(localStorage.getItem('flylearn_user')||'null')||{id:null};
 
+//Fazer a comunicação entre o fronte o back
 async function api(path, opts) {
   const r = await fetch(API_BASE + path, Object.assign({
     credentials: 'include',
@@ -142,9 +79,7 @@ async function api(path, opts) {
   return dados;
 }
 
-/* Abre uma aba nova só com o conteúdo a imprimir (cada .pg = uma folha) e manda
-   imprimir. w.onload espera a página (e as imagens, como o QR) carregarem antes
-   de chamar print() — sem isso o QR podia não aparecer a tempo. */
+//Preparar e imprimir documentos do sistema
 function printDoc(title, html, extraCss) {
   const w = window.open('', '_blank');
   if (!w) { toast('O navegador bloqueou a aba de impressão. Permita pop-ups para este site e tente de novo.'); return; }
@@ -178,9 +113,7 @@ function printDoc(title, html, extraCss) {
   w.onload = () => { w.focus(); w.print(); };
 }
 
-/* Impressão a partir dos dados do backend (/versoes/<id>/completa/), que já vem
-   com o texto das questões/alternativas e a letra da alternativa correta —
-   diferente de provaPg/gabPg acima, que leem do DB mock em localStorage. */
+//Montar e prova visualmente a prova
 const provaPgApi = v => `
   <section class="pg">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
@@ -203,6 +136,7 @@ const provaPgApi = v => `
   </section>
 `;
 
+//Montar visualmente o gabarito
 const gabPgApi = v => `
   <section class="pg">
     <h1>Gabarito — ${esc(v.prova_nome)}</h1>
@@ -217,21 +151,18 @@ const gabPgApi = v => `
   </section>
 `;
 
+//Buscar versões de uma avaliação no servidro e preparar elas
 async function imprimirVersoesProvaApi(ids, tituloProva) {
   const vs = await Promise.all(ids.map(i => api('/versoes/' + i + '/completa/')));
   printDoc('Prova ' + tituloProva + (vs.length == 1 ? ' ' + vs[0].codigo : ''), vs.map(provaPgApi).join(''));
 }
 
+//Buscar os gabaritos das versões de uma avaliação do backend
 async function imprimirGabaritosProvaApi(ids, tituloProva) {
   const vs = await Promise.all(ids.map(i => api('/versoes/' + i + '/completa/')));
   printDoc('Gabarito ' + tituloProva + (vs.length == 1 ? ' ' + vs[0].codigo : ''), vs.map(gabPgApi).join(''));
 }
 
-/* ---------- FOLHA DE RESPOSTAS (10 ou 20 questões) com QR da versão ----------
-   Gerada aqui no front (A4, medidas em mm) no layout dos modelos "GABARITO - 10/20 QUESTÕES":
-   4 quadrados pretos nos cantos, bolhas A–E em duas colunas e o QR da versão no quadro tracejado.
-   O QR vem de /versoes/<id>/qr.png (o mesmo da prova e do gabarito).
-   aluno (opcional): { nome, ra, turma } já preenche o cabeçalho da folha. */
 const FOLHA_CSS = `
   @page{size:A4;margin:0}
   @media print{ @page{size:A4;margin:0} }
@@ -263,6 +194,7 @@ const FOLHA_CSS = `
   .fl .sg{top:274mm;width:58mm;border-top:.3mm solid #111;text-align:center;font-size:8.5pt;padding-top:1.2mm}
 `;
 
+//Montagem da folha de respostas que será utilizada pelos alunos
 function folhaRespostasPgApi(v, aluno) {
   const n = v.itens.length, dez = n === 10;
   const al = aluno || {};
@@ -311,7 +243,7 @@ function folhaRespostasPgApi(v, aluno) {
   </section>`;
 }
 
-/* ids = ids das versões (versao_prova.id); uma folha por versão (ou uma só, preenchida, se vier aluno) */
+// Responsável por organizar a impressão das folhas 
 async function imprimirFolhasRespostasApi(ids, tituloProva, aluno) {
   let vs;
   try { vs = await Promise.all(ids.map(i => api('/versoes/' + i + '/completa/'))); }
@@ -321,6 +253,7 @@ async function imprimirFolhasRespostasApi(ids, tituloProva, aluno) {
   printDoc('Folha de respostas ' + (tituloProva || '') + (vs.length == 1 ? ' ' + vs[0].codigo : ''), vs.map(v => folhaRespostasPgApi(v, aluno)).join(''), FOLHA_CSS);
 }
 
+//Responsável por montar a estrutura visual padrão das páginas internas. 
 function layout(active, title, sub) {
   document.body.innerHTML = `
     <div class="app-shell">
@@ -348,6 +281,7 @@ function layout(active, title, sub) {
   return $('#c');
 }
 
+//Abrir uma janela sobreposta à página principal
 function modal(html) {
   const m = document.createElement('div');
   m.className = 'modal-overlay show';
@@ -363,11 +297,7 @@ function modal(html) {
   return m;
 }
 
-/* ---------- MOBILE ----------
-   Menu em gaveta (botão ☰ na barra de topo) e rótulos nas células das tabelas,
-   que no celular viram cartões (ver "MOBILE" no styles.css). Roda sozinho em
-   toda tela que tenha .sidebar / .topbar / table.aluno-table, inclusive
-   quando a tela é montada depois pelo layout(). */
+//Abrir e fechar o menu lateral 
 function alternarMenu(abrir) {
   const aberto = typeof abrir === 'boolean' ? abrir : !document.body.classList.contains('nav-open');
   document.body.classList.toggle('nav-open', aberto);
@@ -384,6 +314,7 @@ function alternarMenu(abrir) {
   }
 }
 
+//Preparar ou inserir os elementos de navegação 
 function montarMenuMobile() {
   const sb = $('.sidebar'), tb = $('.topbar');
   if (!sb || !tb) return;
@@ -417,6 +348,7 @@ function montarMenuMobile() {
   }
 }
 
+//Adicionar automaticamente os nomes das colunas 
 function rotularTabelas() {
   document.querySelectorAll('table.aluno-table:not([data-nostack])').forEach(t => {
     const cab = [...t.querySelectorAll('thead th')].map(th => th.hasAttribute('data-nolabel') ? '' : th.textContent.trim());
@@ -428,6 +360,7 @@ function rotularTabelas() {
   });
 }
 
+//Organiza atualizações da interface mobile 
 (function iniciarMobile() {
   let agendado = false;
   const atualizar = () => {
