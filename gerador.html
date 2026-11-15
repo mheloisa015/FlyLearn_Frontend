@@ -229,7 +229,9 @@
       if (!P && questoesPool.length < NQ()) return fail('A matéria tem só ' + questoesPool.length + ' questões ativas; para uma prova de ' + NQ() + ' cadastre mais no Banco de questões.');
       if (!P && sel.size != NQ()) return fail('Escolha exatamente ' + NQ() + ' questões (você marcou ' + sel.size + ').');
       if (!sel.size) return fail('Escolha pelo menos uma questão.');
-      if (!(n >= 1 && n <= 10)) return fail('Informe de 1 a 10 versões.');
+      if (!Number.isInteger(n) || n < 1 || n > 4) {
+        return fail('Informe uma quantidade entre 1 e 4 versões.');
+      }
 
       const btn = $('#go');
       btn.disabled = true;
