@@ -285,7 +285,7 @@
     }
 
     async function del(i) {
-      if (!confirm('Excluir a questão #' + i + '?')) return;
+      if (!await confirmar('Excluir a questão #' + i + '?')) return;
       try {
         await api('/questoes/' + i + '/', { method: 'DELETE' });
         if (editId == i) reset();

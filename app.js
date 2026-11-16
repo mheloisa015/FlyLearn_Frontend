@@ -33,6 +33,33 @@ function toast(msg, tipo = 'erro') {
   setTimeout(fechar, 6000);
 }
 
+//Caixa de confirmação customizada (substitui o confirm() do navegador). Retorna true/false.
+function confirmar(msg, okTxt = 'Excluir') {
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.className = 'confirm-overlay';
+    ov.innerHTML = `
+      <div class="confirm-box">
+        <p>${esc(msg)}</p>
+        <div class="confirm-actions">
+          <button type="button" class="btn-small confirm-cancelar">Cancelar</button>
+          <button type="button" class="confirm-ok">${esc(okTxt)}</button>
+        </div>
+      </div>
+    `;
+    const fechar = v => {
+      ov.classList.remove('show');
+      setTimeout(() => ov.remove(), 180);
+      resolve(v);
+    };
+    ov.querySelector('.confirm-cancelar').onclick = () => fechar(false);
+    ov.querySelector('.confirm-ok').onclick = () => fechar(true);
+    ov.onclick = e => { if (e.target === ov) fechar(false); };
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('show'));
+  });
+}
+
 //Embaralha elementos de uma lista
 const shuffle = a => {
   //array

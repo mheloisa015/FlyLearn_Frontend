@@ -164,7 +164,7 @@
       if (questoes.some(x => x.materia_id == i) || provas.some(p => p.materia_id == i)) {
         return toast('Não é possível excluir: há questões ou provas vinculadas a esta matéria.');
       }
-      if (!confirm('Excluir a matéria “' + m.nome + '”?')) return;
+      if (!await confirmar('Excluir a matéria “' + m.nome + '”?')) return;
 
       try {
         await api('/materias/' + i + '/', { method: 'DELETE' });

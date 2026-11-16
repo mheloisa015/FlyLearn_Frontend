@@ -123,7 +123,7 @@
     }
 
     async function del(pid) {
-      if (!confirm('Excluir esta prova e suas versões?')) return;
+      if (!await confirmar('Excluir esta prova e suas versões?')) return;
       try {
         await api('/provas/' + pid + '/', { method: 'DELETE' });
         draw();

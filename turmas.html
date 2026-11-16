@@ -212,7 +212,7 @@
     }
 
     async function delT(i) {
-      if (!confirm('Excluir a turma e todos os seus alunos?')) return;
+      if (!await confirmar('Excluir a turma e todos os seus alunos?')) return;
       try {
         await api('/turmas/' + i + '/', { method: 'DELETE' });
         await load();
@@ -234,7 +234,7 @@
     }
 
     async function delA(i) {
-      if (!confirm('Excluir este aluno?')) return;
+      if (!await confirmar('Excluir este aluno?')) return;
       try {
         await api('/alunos/' + i + '/', { method: 'DELETE' });
         await load();

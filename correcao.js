@@ -140,7 +140,7 @@
 
   async function excluir(id) {
     const a = avs.find(x => x.id === id);
-    if (!a || !confirm(`Excluir a avaliação de ${a.aluno_nome}? A nota e as respostas dela também serão apagadas.`)) return;
+    if (!a || !await confirmar(`Excluir a avaliação de ${a.aluno_nome}? A nota e as respostas dela também serão apagadas.`)) return;
     try {
       await api('/avaliacoes/' + id + '/', { method: 'DELETE' });
       if (alvoId === id) { alvoId = null; window.omrScan.setGabarito(null); }
