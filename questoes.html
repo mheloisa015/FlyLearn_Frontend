@@ -217,12 +217,12 @@
       questoesCache = qs;
       $('#count').textContent = qs.length + (qs.length == 1 ? ' questão encontrada' : ' questões encontradas');
 
-      $('#list').innerHTML = qs.map(q => {
+      $('#list').innerHTML = qs.map((q, idx) => {
         const al = [...q.alts].sort((a, b) => (a.ordem_original || 0) - (b.ordem_original || 0));
         return `<tr>
-          
+
           <td>
-            <b>${esc(q.enunciado)}</b><br>
+            <b>#${idx + 1}. ${esc(q.enunciado)}</b><br>
             <span class="code">${esc(materiaNome(q.materia_id))} · atualizada em ${fmt(q.updated_at || q.created_at)}</span>
             <details style="margin-top:6px">
               <summary style="cursor:pointer;color:var(--ink-blue);font-size:.84rem;font-weight:600">Ver ${al.length} alternativas</summary>
@@ -233,9 +233,9 @@
           </td>
           <td><span class="tag ${q.ativo ? 'tag-green' : 'tag-red'}">${q.ativo ? 'Ativa' : 'Inativa'}</span></td>
           <td class="actions">
-            <button class="btn-small" onclick="edit(${q.id})">Editar</button>
+            <button class="btn-small" onclick="edit(${q.id},${idx + 1})">Editar</button>
             <button class="btn-small" onclick="tog(${q.id})">${q.ativo ? 'Desativar' : 'Ativar'}</button>
-            <button class="btn-icon-del" onclick="del(${q.id})">Excluir</button>
+            <button class="btn-icon-del" onclick="del(${q.id},${idx + 1})">Excluir</button>
           </td>
         </tr>`;
       }).join('') || '<tr class="vazio"><td colspan="4" class="aluno-empty">Nenhuma questão encontrada.</td></tr>';
@@ -252,7 +252,7 @@
       drawAlts();
     }
 
-    function edit(i) {
+    function edit(i, n) {
       const q = questoesCache.find(x => x.id == i);
       if (!q) return;
       editId = i;
@@ -266,7 +266,7 @@
         correta: a.correta
       }));
 
-      $('#ft').textContent = 'Editar questão #' + i;
+      $('#ft').textContent = 'Editar questão #' + n;
       $('#cancel').style.display = '';
       drawAlts();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -284,8 +284,10 @@
       }
     }
 
-    async function del(i) {
-      if (!await confirmar('Excluir a questão #' + i + '?')) return;
+    async function del(i, n) {
+      const q = questoesCache.find(x => x.id == i);
+      const trecho = q ? (q.enunciado.length > 80 ? q.enunciado.slice(0, 80) + '…' : q.enunciado) : '';
+      if (!await confirmar('Excluir a questão #' + n + (trecho ? ' — "' + trecho + '"' : '') + '?')) return;
       try {
         await api('/questoes/' + i + '/', { method: 'DELETE' });
         if (editId == i) reset();
