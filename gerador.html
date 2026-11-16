@@ -73,11 +73,13 @@
           <p class="sub">Marque exatamente a quantidade escolhida acima, ou use <b>Sortear</b>. Só aparecem questões <b>ativas</b> da matéria (tabela <b>prova_questao</b>).</p>
           <div class="sel-bar">
             <span id="selcount" class="tag tag-blue"></span>
+            <span id="pesototal" class="tag"></span>
             <span>
               <button type="button" class="btn-small" id="rnd">🎲 Sortear questões</button>
               <button type="button" class="btn-small" id="none">Limpar</button>
             </span>
           </div>
+          <p class="sub">A coluna <b>Peso</b> é o valor em pontos de cada questão nesta prova — a soma de todas precisa ser exatamente <b>10</b>. É um valor só desta prova: toda prova nova começa com os pesos em branco.</p>
           <div class="table-wrap">
             <table class="aluno-table">
               <thead>
@@ -85,6 +87,7 @@
                   <th></th>
                   <th>Enunciado</th>
                   <th>Alternativas</th>
+                  <th>Peso</th>
                 </tr>
               </thead>
               <tbody id="qlist"></tbody>
@@ -149,8 +152,30 @@
        prova_questao: versao_prova_id, questao_id, ordem | gabarito: versao_prova_id, prova_questao_id, alternativa_id
        Agora conversando direto com o backend (Django). API_BASE/PROF/api() vêm do app.js. */
     const pid = +new URLSearchParams(location.search).get('prova') || 0;
-    let P = null, materias = [], mat = 0, sel = new Set(), questoesPool = [], itensReadonly = [];
+    let P = null, materias = [], mat = 0, sel = new Set(), questoesPool = [], itensReadonly = [], pesos = {};
     const NQ = () => P ? itensReadonly.length : +$('#nq').value;
+
+    function somaPesos() {
+      const total = P
+        ? itensReadonly.reduce((s, it) => s + (parseFloat(it.peso) || 0), 0)
+        : [...sel].reduce((s, id) => s + (parseFloat(pesos[id]) || 0), 0);
+      return Math.round(total * 100) / 100;
+    }
+
+    function atualizarTagPeso() {
+      const total = somaPesos();
+      const tag = $('#pesototal');
+      if (!tag) return;
+      tag.textContent = 'Soma dos pesos: ' + total.toLocaleString('pt-BR') + ' / 10';
+      tag.className = 'tag ' + (total === 10 ? 'tag-green' : 'tag-red');
+    }
+
+    // Atualiza só o peso digitado e o total, sem redesenhar a tabela (evita perder o foco do campo).
+    function setPeso(id, v) {
+      const n = parseFloat(String(v).replace(',', '.'));
+      pesos[id] = isNaN(n) ? 0 : n;
+      atualizarTagPeso();
+    }
 
     async function carregarQuestoesMat() {
       questoesPool = mat ? await api('/questoes/?materia_id=' + mat + '&ativo=1', {}) : [];
@@ -188,9 +213,9 @@
     }
 
     function drawQ() {
-      const qs = P 
-        ? itensReadonly.map(it => ({ id: it.ordem, enunciado: it.enunciado, n: it.alternativas.length })) 
-        : questoesPool.map(q => ({ id: q.id, enunciado: q.enunciado, n: q.alts.length }));
+      const qs = P
+        ? itensReadonly.map(it => ({ id: it.ordem, enunciado: it.enunciado, n: it.alternativas.length, peso: it.peso }))
+        : questoesPool.map(q => ({ id: q.id, enunciado: q.enunciado, n: q.alts.length, peso: pesos[q.id] }));
 
       $('#qlist').innerHTML = qs.map(q => `
         <tr>
@@ -199,14 +224,19 @@
           </td>
           <td>${esc(q.enunciado)}</td>
           <td>${q.n}</td>
+          <td class="c">
+            <input type="number" step="0.1" min="0" style="width:72px;text-align:center" value="${q.peso != null ? q.peso : ''}" ${P ? 'disabled' : ''} oninput="setPeso(${q.id},this.value)" aria-label="Peso da questão ${q.id}">
+          </td>
         </tr>
-      `).join('') || '<tr><td colspan="3" class="aluno-empty">Nenhuma questão ativa nesta matéria. Cadastre em <a href="questoes.html">Banco de questões</a>.</td></tr>';
+      `).join('') || '<tr><td colspan="4" class="aluno-empty">Nenhuma questão ativa nesta matéria. Cadastre em <a href="questoes.html">Banco de questões</a>.</td></tr>';
 
       $('#selcount').textContent = sel.size + ' de ' + NQ() + ' selecionadas · ' + qs.length + ' ativas na matéria';
+      atualizarTagPeso();
     }
 
     function tg(i, on) {
       on ? sel.add(i) : sel.delete(i);
+      if (!on) delete pesos[i];
       drawQ();
     }
 
@@ -214,6 +244,7 @@
       mat = +$('#pm').value;
       await carregarQuestoesMat();
       sel = new Set(questoesPool.slice(0, NQ()).map(q => q.id));
+      pesos = {};
       drawQ();
     };
 
@@ -231,11 +262,13 @@
 
     $('#rnd').onclick = () => {
       sel = new Set(shuffle(questoesPool).slice(0, NQ()).map(q => q.id));
+      pesos = {};
       drawQ();
     };
 
     $('#none').onclick = () => {
       sel = new Set();
+      pesos = {};
       drawQ();
     };
 
@@ -250,6 +283,8 @@
       if (!P && questoesPool.length < NQ()) return fail('A matéria tem só ' + questoesPool.length + ' questões ativas; para uma prova de ' + NQ() + ' cadastre mais no Banco de questões.');
       if (!P && sel.size != NQ()) return fail('Escolha exatamente ' + NQ() + ' questões (você marcou ' + sel.size + ').');
       if (!sel.size) return fail('Escolha pelo menos uma questão.');
+      if (!P && somaPesos() !== 10) return fail('A soma dos pesos das questões deve ser exatamente 10 pontos (está em ' + somaPesos().toLocaleString('pt-BR') + ').');
+      if (!P && [...sel].some(id => !(pesos[id] > 0))) return fail('O peso de cada questão deve ser maior que zero.');
       if (!Number.isInteger(n) || n < 1 || n > 4) {
         return fail('Informe uma quantidade entre 1 e 4 versões.');
       }
@@ -267,6 +302,7 @@
               nome: $('#pn').value.trim(),
               descricao: $('#pd').value.trim(),
               qids: [...sel],
+              pesos: Object.fromEntries([...sel].map(id => [id, pesos[id] || 0])),
               n_versoes: n,
               embaralhar_questoes: $('#eq').checked,
               embaralhar_alternativas: $('#ea').checked

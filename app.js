@@ -93,6 +93,7 @@ function printDoc(title, html, extraCss) {
     .id{font-size:.88rem;margin:10px 0 14px;border-bottom:1px solid #ccc;padding-bottom:10px}
     .ins{font-size:.88rem;margin:0 0 14px;font-style:italic}
     .q{margin-bottom:14px;font-size:.92rem}
+    .peso{float:right;font-weight:600;font-size:.82rem;color:#444;white-space:nowrap}
     .o{margin:6px 0 0 18px}
     .o div{margin-bottom:4px}
     .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0}
@@ -127,6 +128,7 @@ const provaPgApi = v => `
     ${v.prova_descricao ? `<p class="ins">${esc(v.prova_descricao)}</p>` : ''}
     ${v.itens.map(it => `
       <div class="q">
+        ${it.peso != null ? `<span class="peso">(${Number(it.peso).toLocaleString('pt-BR')} ${Number(it.peso) === 1 ? 'ponto' : 'pontos'})</span>` : ''}
         <b>${it.ordem}.</b>${esc(it.enunciado)}
         <div class="o">
           ${it.alternativas.map((t, k) => `<div>( &nbsp;) ${L[k]}) ${esc(t)}</div>`).join('')}
