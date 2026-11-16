@@ -34,7 +34,8 @@
   .scan-tabs button{padding:10px 16px;border:1px solid #d5d9e0;background:#fff;border-radius:8px;cursor:pointer;font:inherit}
   .scan-tabs button[aria-selected="true"]{background:#1f4fd8;border-color:#1f4fd8;color:#fff}
   .scan-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
-  @media(max-width:860px){.scan-grid{grid-template-columns:1fr}}
+  @media(max-width:860px){.scan-grid{grid-template-columns:minmax(0,1fr)}}
+  .scan-grid>*{min-width:0}
   .scan-stage{position:relative;margin:0 auto;width:100%;aspect-ratio:3/4;max-height:78vh;background:#10141c;border-radius:12px;overflow:hidden;display:grid;place-items:center;color:#cfd6e4}
   .scan-stage video{width:100%;height:100%;object-fit:contain}
   .scan-stage.up{aspect-ratio:auto;min-height:220px}
@@ -77,10 +78,37 @@
   .scan-edit-hint{font-size:.88rem;opacity:.85;margin:0 0 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .scan-edit-hint button{padding:5px 10px;border-radius:6px;border:1px solid #d5d9e0;background:#fff;cursor:pointer;font:inherit;font-size:.85rem}
   .scan-edit-hint button[hidden]{display:none}
+  .scan-edit-hint>span:first-of-type{flex:1 1 200px;min-width:0}
   .scan-result select.ed{padding:5px 6px;border-radius:6px;border:1px solid #d5d9e0;font:inherit;background:#fff;min-width:64px}
   .scan-result select.ed:disabled{opacity:.7;cursor:not-allowed}
   .scan-result tr.editada td{background:#eef3ff}
   .scan-result tr.editada select.ed{border-color:#1f4fd8;font-weight:700}
+  /* ---- responsivo ---- */
+  .scan-result{min-width:0;overflow-wrap:anywhere}
+  .scan-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .scan-result select.ed{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+  .scan-info,.scan-tip,.scan-phone>div{overflow-wrap:anywhere}
+  .scan-phone>div{min-width:0}
+  @media(max-width:560px){
+    .scan-result .nota{font-size:2.1rem}
+    .scan-result .stats{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:.88rem}
+    .scan-result table{table-layout:fixed}
+    .scan-result th,.scan-result td{padding:7px 3px;font-size:.84rem}
+    .scan-result th{font-size:.74rem;white-space:nowrap}
+    .scan-result th:nth-child(1){width:21%}
+    .scan-result th:nth-child(2){width:33%}
+    .scan-result th:nth-child(3){width:20%}
+    .scan-result th:nth-child(4){width:26%}
+    .scan-result select.ed{min-height:40px;padding:6px 2px}
+    .scan-edit-hint button{min-height:40px}
+    .scan-tabs button{flex:1 1 0;padding:12px 8px}
+    .scan-actions button{flex:1 1 100%;min-height:48px}
+    .scan-phone{padding:12px;gap:10px}
+    .scan-save{flex-direction:column;align-items:stretch}
+    .scan-save>*{flex:1 1 auto!important;width:100%;box-sizing:border-box}
+    .scan-save button{min-height:48px}
+    .scan-save select{min-height:46px}
+  }
   `;
   document.head.appendChild(Object.assign(document.createElement('style'), { textContent: css }));
 
@@ -129,9 +157,6 @@
   // celular/tablet (tela de toque) x computador
   const ehCelular = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  // computador: a câmera (webcam) fica bloqueada; só o envio de imagem é permitido
-  if (!ehCelular) panel.querySelector('.scan-tabs').style.display = 'none';
-
   const showErr = m => { err.textContent = m || ''; err.style.display = m ? 'block' : 'none'; };
   const stopCam = () => { stream && stream.getTracks().forEach(t => t.stop()); stream = null; };
   const btn = (txt, cls, fn) => {
@@ -148,7 +173,6 @@
   }
 
   function setMode(m) {
-    if (m === 'cam' && !ehCelular) m = 'up';   // bloqueio da webcam no computador
     mode = m; blob = null; showErr('');
     $q('#t-cam').setAttribute('aria-selected', m === 'cam');
     $q('#t-up').setAttribute('aria-selected', m === 'up');
@@ -159,7 +183,6 @@
   }
 
   async function startCam() {
-    if (!ehCelular) { setMode('up'); return; }   // nunca chama getUserMedia no computador
     tip.textContent = 'Segure o celular na vertical e encaixe a folha inteira na moldura, com boa luz e sem sombra.';
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       showErr('Este navegador não permite acessar a câmera (use HTTPS ou localhost). Envie uma imagem.');
@@ -206,7 +229,7 @@
     drop.innerHTML = 'Arraste a imagem aqui ou clique para escolher<small>Foto ou digitalização da folha de respostas</small>';
     const inp = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*', hidden: true });
     drop.appendChild(inp); stage.appendChild(drop);
-    if (ehCelular) btn('Tirar foto com o celular', '', cameraNativa);
+    btn('Tirar foto com o celular', '', cameraNativa);
     const pick = f => {
       if (!f || !f.type.startsWith('image/')) return showErr('Escolha um arquivo de imagem.');
       showErr(''); blob = f;
@@ -343,10 +366,10 @@
     const atual = l.tipo === 'BRANCO' ? '' : l.tipo === 'ANULADA' ? 'ANULADA' : String(l.resposta_detectada).toUpperCase();
     const letras = 'ABCDE'.split('');
     if (atual && atual !== 'ANULADA' && !letras.includes(atual)) letras.push(atual);
-    let h = `<option value=""${atual === '' ? ' selected' : ''}>— (em branco)</option>`;
+    let h = `<option value=""${atual === '' ? ' selected' : ''}>Em branco</option>`;
     h += letras.map(x => `<option value="${x}"${atual === x ? ' selected' : ''}>${x}</option>`).join('');
     if (est.valAnulada !== undefined || l.tipo === 'ANULADA')
-      h += `<option value="ANULADA"${atual === 'ANULADA' ? ' selected' : ''}>Anulada (várias marcas)</option>`;
+      h += `<option value="ANULADA"${atual === 'ANULADA' ? ' selected' : ''}>Anulada</option>`;
     return h;
   }
 
@@ -381,10 +404,10 @@
       <p class="scan-edit-hint">✏️ <span>O leitor errou alguma? Mude a coluna <b>Marcada</b> antes de salvar; a nota é recalculada na hora.</span>
         <span id="scEdN"></span>
         <button type="button" id="scRestaurar" hidden>Restaurar leitura original</button></p>
-      <table>
+      <div class="scan-table-wrap"><table>
         <thead><tr><th>Questão</th><th>Marcada</th><th>Correta</th><th>Situação</th></tr></thead>
         <tbody>${est.linhas.map((l, i) => `<tr data-i="${i}" class="${l.editada ? 'editada' : ''}"><td>${l.questao}</td><td><select class="ed" data-i="${i}" aria-label="Resposta marcada na questão ${l.questao}">${opcoes(l)}</select></td><td>${l.resposta_correta}</td><td class="sit ${l.situacao}">${rotSit(l.situacao)}</td></tr>`).join('')}</tbody>
-      </table>`;
+      </table></div>`;
   }
 
   res.addEventListener('change', e => {
@@ -453,6 +476,7 @@
     };
     sincronizar();
     pintar();
+    if (window.matchMedia('(max-width:860px)').matches) res.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     alunoSel.innerHTML = '';
     if (origem === 'qr' && cand.length) {
